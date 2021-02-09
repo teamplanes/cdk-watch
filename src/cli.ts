@@ -2,6 +2,7 @@
 import {program, Option} from 'commander';
 import * as fs from 'fs-extra';
 import * as path from 'path';
+import {list} from './commands/list';
 import {watch} from './commands/watch';
 
 const {version} = fs.readJSONSync(path.resolve(__dirname, '../package.json'));
@@ -36,11 +37,11 @@ program
   .action(watch);
 
 program
-  .command('ls <pathGlob>')
+  .command('ls [pathGlob]')
   .description('list all lambdas matching the path glob')
   .addOption(cdkContextOption)
   .addOption(profileOption)
-  .action((pathGlob) => console.log('TODO: ls', path));
+  .action(list);
 
 program
   .command('logs <pathGlob>')
