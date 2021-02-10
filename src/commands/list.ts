@@ -4,15 +4,15 @@ import {filterManifestByPath} from '../utils/filterManifestByPath';
 import {readManifest} from '../utils/readManifest';
 import {runSynth} from '../utils/runSynth';
 
-export const list = (
+export const list = async (
   pathGlob: string | undefined,
   options: {
     context: string[];
     app: string;
     profile: string;
   },
-): void => {
-  runSynth({
+): Promise<void> => {
+  await runSynth({
     context: options.context || [],
     app: options.app,
     profile: options.profile,

@@ -1,7 +1,5 @@
 import * as path from 'path';
 import * as esbuild from 'esbuild';
-import Twisters from 'twisters';
-import chalk from 'chalk';
 import {copyCdkAssetToWatchOutdir} from '../utils/copyCdkAssetToWatchOutdir';
 import {filterManifestByPath} from '../utils/filterManifestByPath';
 import {initAwsSdk} from '../utils/initAwsSdk';
@@ -11,38 +9,22 @@ import {runSynth} from '../utils/runSynth';
 import {tailLogsForLambda} from '../utils/tailLogsForLambda';
 import {updateLambdaFunctionCode} from '../utils/updateLambdaFunctionCode';
 import {createCLILoggerForLambda} from '../utils/createCLILoggerForLambda';
+import {twisters} from '../utils/twisters';
 
-export const watch = (
+export const watch = async (
   pathGlob: string,
   options: {
     context: string[];
     app: string;
     profile: string;
+    logs: boolean;
   },
-): void => {
-  const twisters = new Twisters<{prefix?: string; error?: Error}>({
-    pinActive: true,
-    messageDefaults: {
-      render: (message, frame) => {
-        const {active, text, meta} = message;
-        const prefix = meta?.prefix ? `${meta?.prefix} ` : '';
-        const completion = meta?.error
-          ? `error: ${chalk.red(meta.error.toString())}`
-          : 'done';
-        return active && frame
-          ? `${prefix}${text}... ${frame}`
-          : `${prefix}${text}... ${completion}`;
-      },
-    },
-  });
-  const synthProgressText = 'synthesizing CDK app';
-  twisters.put('synth', {text: synthProgressText});
-  runSynth({
+): Promise<void> => {
+  await runSynth({
     context: options.context || [],
     app: options.app,
     profile: options.profile,
   });
-  twisters.put('synth', {active: false, text: synthProgressText});
 
   const manifest = readManifest();
   if (!manifest) throw new Error('cdk-watch manifest file was not found');
@@ -67,13 +49,15 @@ export const watch = (
         lambdaDetails.map(async ({detail, lambdaCdkPath, lambdaManifest}) => {
           const logger = createCLILoggerForLambda(lambdaCdkPath);
           const watchOutdir = copyCdkAssetToWatchOutdir(lambdaManifest);
-          tailLogsForLambda(detail)
-            .on('log', (log) => {
-              logger.log(log.toString());
-            })
-            .on('error', (error) => {
-              logger.error(error.toString());
-            });
+          if (options.logs) {
+            tailLogsForLambda(detail)
+              .on('log', (log) => {
+                logger.log(log.toString());
+              })
+              .on('error', (error) => {
+                logger.error(error.toString());
+              });
+          }
 
           logger.log('watching');
           esbuildService.build({

@@ -3,6 +3,8 @@ import {program, Option} from 'commander';
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import {list} from './commands/list';
+import {logs} from './commands/logs';
+import {once} from './commands/once';
 import {watch} from './commands/watch';
 
 const {version} = fs.readJSONSync(path.resolve(__dirname, '../package.json'));
@@ -37,7 +39,8 @@ program
   .action(watch);
 
 program
-  .command('ls [pathGlob]')
+  .command('ls')
+  .arguments('<pathGlob>')
   .description('list all lambdas matching the path glob')
   .addOption(cdkContextOption)
   .addOption(profileOption)
@@ -50,7 +53,7 @@ program
   )
   .addOption(cdkContextOption)
   .addOption(profileOption)
-  .action((pathGlob) => console.log('TODO: logs', path));
+  .action(logs);
 
 program
   .command('once <pathGlob>')
@@ -59,6 +62,10 @@ program
   )
   .addOption(cdkContextOption)
   .addOption(profileOption)
-  .action((pathGlob) => console.log('TODO: once', path));
+  .action(once);
 
-program.parse(process.argv);
+program.parseAsync(process.argv).catch((e) => {
+  // eslint-disable-next-line no-console
+  console.log(e);
+  process.exit(1);
+});

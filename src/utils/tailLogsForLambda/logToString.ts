@@ -60,10 +60,12 @@ const formatJsonLog = (log: string | Record<string, any>) => {
 };
 
 export const logToString = (log: LambdaLog): string => {
-  const [, minutes, seconds] = log.info.timestamp
+  const time = log.info.timestamp
     .toLocaleTimeString()
-    .split(':');
-  const time = `${chalk.blue(minutes)}${chalk.grey(':')}${chalk.blue(seconds)}`;
+    .split(':')
+    .slice(0, 3)
+    .map((num) => chalk.blue(num))
+    .join(':');
 
   switch (log.event) {
     case 'START':

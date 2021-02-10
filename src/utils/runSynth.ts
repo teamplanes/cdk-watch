@@ -1,11 +1,14 @@
 import execa from 'execa';
+import {twisters} from './twisters';
 
-export const runSynth = (options: {
+export const runSynth = async (options: {
   context: string[];
   profile?: string;
   app?: string;
-}): void => {
-  execa.sync(
+}): Promise<void> => {
+  const synthProgressText = 'synthesizing CDK app';
+  twisters.put('synth', {text: synthProgressText});
+  await execa(
     'cdk',
     [
       'synth',
@@ -16,4 +19,5 @@ export const runSynth = (options: {
     ].filter(Boolean) as string[],
     {preferLocal: true, stdio: 'inherit'},
   );
+  twisters.put('synth', {active: false, text: synthProgressText});
 };

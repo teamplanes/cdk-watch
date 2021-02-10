@@ -4,8 +4,8 @@ import {CdkWatchManifest} from '../types.d';
 export const filterManifestByPath = (
   pathMatch: string,
   manifest: CdkWatchManifest,
-): CdkWatchManifest =>
-  Object.keys(manifest.lambdas)
+): CdkWatchManifest => {
+  const filtered = Object.keys(manifest.lambdas)
     .filter(minimatch.filter(pathMatch))
     .reduce(
       (current, next) => ({
@@ -14,3 +14,8 @@ export const filterManifestByPath = (
       }),
       {...manifest, lambdas: {}},
     );
+
+  if (!Object.keys(filtered.lambdas).length)
+    throw new Error(`No Lambdas found at "${pathMatch}"`);
+  return filtered;
+};
