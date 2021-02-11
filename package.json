@@ -8,7 +8,7 @@
   "bin": {
     "cdkw": "lib/cli.js"
   },
-  "version": "0.0.14",
+  "version": "0.0.15-next.0",
   "scripts": {
     "type-check": "tsc -p tsconfig.json --noEmit",
     "build": "tsc -p tsconfig.json",
