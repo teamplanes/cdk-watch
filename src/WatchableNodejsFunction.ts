@@ -32,7 +32,10 @@ class WatchableNodejsFunction extends NodejsFunction {
       platform: 'node',
       minify: props.bundling?.minify,
       sourcemap: props.bundling?.sourceMap,
-      external: props.bundling?.externalModules,
+      external: [
+        ...(props.bundling?.externalModules ?? []),
+        ...(props.bundling?.nodeModules ?? []),
+      ],
       loader: props.bundling?.loader as {[ext: string]: Loader} | undefined,
       define: props.bundling?.define,
       logLevel: props.bundling?.logLevel,
