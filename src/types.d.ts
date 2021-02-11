@@ -1,3 +1,5 @@
+import esbuild from 'esbuild';
+
 export interface LambdaManifestType {
   assetPath: string;
   esbuildOptions: esbuild.BuildOptions;

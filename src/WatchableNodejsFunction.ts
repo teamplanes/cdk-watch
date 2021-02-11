@@ -1,5 +1,6 @@
 /* eslint-disable import/no-extraneous-dependencies */
 import {NodejsFunction, NodejsFunctionProps} from '@aws-cdk/aws-lambda-nodejs';
+import {Runtime} from '@aws-cdk/aws-lambda';
 import {Asset} from '@aws-cdk/aws-s3-assets';
 import * as path from 'path';
 import findUp from 'find-up';
@@ -26,7 +27,11 @@ class WatchableNodejsFunction extends NodejsFunction {
     super(scope, id, props);
     const {entry} = props;
     if (!entry) throw new Error('`entry` must be provided');
+    const target = props.runtime?.runtimeEquals(Runtime.NODEJS_10_X)
+      ? 'node10'
+      : 'node12';
     this.esbuildOptions = {
+      target,
       bundle: true,
       entryPoints: [entry],
       platform: 'node',
