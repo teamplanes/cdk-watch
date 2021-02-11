@@ -67,6 +67,8 @@ export const watch = async (
             // improve upload times
             treeShaking: lambdaManifest.esbuildOptions.treeShaking ?? true,
             minify: lambdaManifest.esbuildOptions.minify ?? true,
+            // Keep the console clean from build warnings, only print errors
+            logLevel: lambdaManifest.esbuildOptions.logLevel ?? 'error',
             watch: {
               onRebuild: (error) => {
                 if (error) {
