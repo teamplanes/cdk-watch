@@ -63,6 +63,10 @@ export const watch = async (
           esbuildService.build({
             ...lambdaManifest.esbuildOptions,
             outfile: path.join(watchOutdir, 'index.js'),
+            // Unless explicitly told not to, turn on treeShaking and minify to
+            // improve upload times
+            treeShaking: lambdaManifest.esbuildOptions.treeShaking ?? true,
+            minify: lambdaManifest.esbuildOptions.minify ?? true,
             watch: {
               onRebuild: (error) => {
                 if (error) {
