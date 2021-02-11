@@ -10,6 +10,7 @@ export const copyCdkAssetToWatchOutdir = (
     errorOnExist: false,
     recursive: true,
     overwrite: true,
+    dereference: true,
   });
   return watchOutdir;
 };

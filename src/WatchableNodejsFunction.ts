@@ -43,6 +43,10 @@ class WatchableNodejsFunction extends NodejsFunction {
       banner: props.bundling?.banner,
       footer: props.bundling?.footer,
     };
+    console.log(
+      '🚀 ~ file: WatchableNodejsFunction.ts ~ line 30 ~ WatchableNodejsFunction ~ this.esbuildOptions',
+      this.esbuildOptions,
+    );
   }
 
   /**
