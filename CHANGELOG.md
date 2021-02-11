@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.6](https://github.com/teamplanes/cdk-watch/compare/v0.0.5...v0.0.6) (2021-02-11)
+
+
+### Features
+
+* automatically infer the tsconfig path if none provided ([4cd3920](https://github.com/teamplanes/cdk-watch/commit/4cd39204a199a6c4bbef4d2c0b27da889cbc8ae4))
+
 ### [0.0.5](https://github.com/teamplanes/cdk-watch/compare/v0.0.4...v0.0.5) (2021-02-11)
 
 
