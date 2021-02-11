@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.4](https://github.com/teamplanes/cdk-watch/compare/v0.0.3...v0.0.4) (2021-02-11)
+
+
+### Bug Fixes
+
+* include props in main export and index.ts ([87223ae](https://github.com/teamplanes/cdk-watch/commit/87223ae004c191827e518c352c977325529d7dd2))
+
 ### [0.0.3](https://github.com/teamplanes/cdk-watch/compare/v0.0.1...v0.0.3) (2021-02-11)
 
 
