@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.10](https://github.com/teamplanes/cdk-watch/compare/v0.0.9...v0.0.10) (2021-02-11)
+
+
+### Bug Fixes
+
+* force minification and treeShaking ([0d45e4b](https://github.com/teamplanes/cdk-watch/commit/0d45e4b2bc927d87ec5853b79f1594ad22d533ed))
+
 ### [0.0.9](https://github.com/teamplanes/cdk-watch/compare/v0.0.8...v0.0.9) (2021-02-11)
 
 
