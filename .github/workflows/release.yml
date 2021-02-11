@@ -1,7 +1,7 @@
 name: release
 on:
   push:
-    branches: [master]
+    branches: [master, next]
 jobs:
   release:
     runs-on: ubuntu-latest
@@ -29,13 +29,28 @@ jobs:
       - name: yarn install
         run: yarn install --frozen-lockfile
 
-      - name: generate tag and release body
+      - name: configure git
         run: |
-          git config user.name example
-          git config user.email mail@example.com
-          yarn standard-version -i RELEASE_BODY.md --skip.commit
+          git config user.name ${GITHUB_ACTOR}
+          git config user.email hello@planes.studio
+        env:
+          GITHUB_ACTOR: ${{ secrets.GITHUB_ACTOR }}
 
-      - run: npm publish
+      # Only run on next branch
+      - name: generate tag and release body (next)
+        if: github.ref == 'refs/heads/next'
+        run: |
+          yarn standard-version -i RELEASE_BODY.md --skip.commit
+          npm publish --tag next
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      # Only run on master branch
+      - name: generate tag and release body (latest)
+        if: github.ref == 'refs/heads/master'
+        run: |
+          yarn standard-version -i RELEASE_BODY.md --skip.commit
+          npm publish
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
