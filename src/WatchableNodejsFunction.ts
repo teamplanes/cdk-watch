@@ -7,6 +7,8 @@ import {BuildOptions, Loader} from 'esbuild';
 import {readManifest} from './utils/readManifest';
 import {writeManifest} from './utils/writeManifest';
 
+type WatchableNodejsFunctionProps = NodejsFunctionProps;
+
 /**
  * `extends` NodejsFunction and behaves the same, however `entry` is a required
  * prop to prevent duplicating logic across NodejsFunction and
@@ -15,7 +17,11 @@ import {writeManifest} from './utils/writeManifest';
 class WatchableNodejsFunction extends NodejsFunction {
   public esbuildOptions: BuildOptions;
 
-  constructor(scope: cdk.Construct, id: string, props: NodejsFunctionProps) {
+  constructor(
+    scope: cdk.Construct,
+    id: string,
+    props: WatchableNodejsFunctionProps,
+  ) {
     super(scope, id, props);
     const {entry} = props;
     if (!entry) throw new Error('`entry` must be provided');
