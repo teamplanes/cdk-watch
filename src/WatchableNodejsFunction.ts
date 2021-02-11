@@ -38,7 +38,7 @@ class WatchableNodejsFunction extends NodejsFunction {
       logLevel: props.bundling?.logLevel,
       keepNames: props.bundling?.keepNames,
       tsconfig: props.bundling?.tsconfig
-        ? path.relative(entry, path.resolve(props.bundling?.tsconfig))
+        ? path.resolve(entry, path.resolve(props.bundling?.tsconfig))
         : findUp.sync('tsconfig.json', {cwd: path.dirname(entry)}),
       banner: props.bundling?.banner,
       footer: props.bundling?.footer,
