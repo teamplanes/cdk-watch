@@ -58,7 +58,7 @@ jobs:
         id: publish_tag
         run: |
           git add package.json
-          git commit -m "chore: release"
+          git commit -m "chore: release" -n
           git push --follow-tags
           echo ::set-output name=tag_name::$(git describe HEAD --abbrev=0)
 
