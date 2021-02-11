@@ -41,7 +41,7 @@ $ yarn cdkw "**"
 $ yarn cdkw "MyStack/API/**"
 
 # Run without logs
-$ yarn cdkw "MyStack/API/**" --no-logs
+$ yarn cdkw --no-logs "MyStack/API/**"
 
 # If you are using npm
 $ npm run cdkw "**"
