@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.7](https://github.com/teamplanes/cdk-watch/compare/v0.0.6...v0.0.7) (2021-02-11)
+
+
+### Bug Fixes
+
+* attempt copy with dereference as a fix for "Cannot copy to a subdirectory of itself" ([3282ca8](https://github.com/teamplanes/cdk-watch/commit/3282ca82801146d8c4ad54e2032e9bfe1bf43bc0))
+
 ### [0.0.6](https://github.com/teamplanes/cdk-watch/compare/v0.0.5...v0.0.6) (2021-02-11)
 
 
