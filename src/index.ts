@@ -1,1 +1,4 @@
-export {WatchableNodejsFunction} from './WatchableNodejsFunction';
+export {
+  WatchableNodejsFunction,
+  WatchableNodejsFunctionProps,
+} from './WatchableNodejsFunction';

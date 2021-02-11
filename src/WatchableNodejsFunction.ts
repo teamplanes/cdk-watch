@@ -100,4 +100,4 @@ class WatchableNodejsFunction extends NodejsFunction {
   }
 }
 
-export {WatchableNodejsFunction};
+export {WatchableNodejsFunction, WatchableNodejsFunctionProps};
