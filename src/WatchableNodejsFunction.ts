@@ -2,6 +2,7 @@
 import {NodejsFunction, NodejsFunctionProps} from '@aws-cdk/aws-lambda-nodejs';
 import {Asset} from '@aws-cdk/aws-s3-assets';
 import * as path from 'path';
+import findUp from 'find-up';
 import * as cdk from '@aws-cdk/core';
 import {BuildOptions, Loader} from 'esbuild';
 import {readManifest} from './utils/readManifest';
@@ -38,7 +39,7 @@ class WatchableNodejsFunction extends NodejsFunction {
       keepNames: props.bundling?.keepNames,
       tsconfig: props.bundling?.tsconfig
         ? path.relative(entry, path.resolve(props.bundling?.tsconfig))
-        : undefined,
+        : findUp.sync('tsconfig.json', {cwd: path.dirname(entry)}),
       banner: props.bundling?.banner,
       footer: props.bundling?.footer,
     };
