@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.12](https://github.com/teamplanes/cdk-watch/compare/v0.0.11...v0.0.12) (2021-02-11)
+
+
+### Bug Fixes
+
+* set node target version on esbuild ([8b48a74](https://github.com/teamplanes/cdk-watch/commit/8b48a7499aa65466f25dea129f0a27e355a142f3))
+
 ### [0.0.11](https://github.com/teamplanes/cdk-watch/compare/v0.0.10...v0.0.11) (2021-02-11)
 
 
