@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.5](https://github.com/teamplanes/cdk-watch/compare/v0.0.4...v0.0.5) (2021-02-11)
+
+
+### Bug Fixes
+
+* clean out manifest before synthesizing again ([a193ac5](https://github.com/teamplanes/cdk-watch/commit/a193ac57f3f095f66612650300758aa588404e01))
+
 ### [0.0.4](https://github.com/teamplanes/cdk-watch/compare/v0.0.3...v0.0.4) (2021-02-11)
 
 
