@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.8](https://github.com/teamplanes/cdk-watch/compare/v0.0.7...v0.0.8) (2021-02-11)
+
+
+### Bug Fixes
+
+* remove log ([1cc785d](https://github.com/teamplanes/cdk-watch/commit/1cc785dc3a20da6f461d4e618febfc831196c887))
+* tsconfig should use absolute resolved path ([876b5e8](https://github.com/teamplanes/cdk-watch/commit/876b5e8095659a6776d2ed392fc420f3360c422d))
+
 ### [0.0.7](https://github.com/teamplanes/cdk-watch/compare/v0.0.6...v0.0.7) (2021-02-11)
 
 
