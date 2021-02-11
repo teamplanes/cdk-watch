@@ -12,6 +12,7 @@
   "scripts": {
     "type-check": "tsc -p tsconfig.json --noEmit",
     "build": "tsc -p tsconfig.json",
+    "lint": "eslint . --ext=.ts",
     "try": "node -r ts-node/register src/cli.ts",
     "postinstall": "husky install",
     "prepublishOnly": "yarn build && pinst --disable",
