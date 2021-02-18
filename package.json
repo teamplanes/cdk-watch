@@ -3,7 +3,8 @@
   "main": "lib/index.js",
   "files": [
     "lib",
-    "package.json"
+    "package.json",
+    "cdk-watch-logs-extension"
   ],
   "bin": {
     "cdkw": "lib/cli.js"
@@ -11,6 +12,7 @@
   "version": "0.0.15-next.5",
   "scripts": {
     "type-check": "tsc -p tsconfig.json --noEmit",
+    "bundle-extension": "esbuild src/cdk-watch-logs-extension/index.ts --platform=node --target=node10 --bundle --outfile=cdk-watch-logs-extension/cdk-watch-logs-extension/index.js --sourcemap=inline --minify",
     "build": "tsc -p tsconfig.json",
     "lint": "eslint . --ext=.ts",
     "try": "node -r ts-node/register src/cli.ts",
@@ -40,19 +42,30 @@
     "twisters": "^1.1.0"
   },
   "peerDependencies": {
+    "@aws-cdk/aws-apigatewayv2": "^1.88.0",
+    "@aws-cdk/aws-dynamodb": "^1.88.0",
+    "@aws-cdk/aws-iam": "^1.88.0",
+    "@aws-cdk/aws-lambda": "^1.88.0",
     "@aws-cdk/aws-lambda-nodejs": "^1.88.0",
+    "@aws-cdk/aws-logs": "^1.88.0",
     "@aws-cdk/aws-s3-assets": "^1.88.0",
     "@aws-cdk/core": "^1.88.0",
     "@types/node": "^14.14.25",
     "esbuild": "^0.8.43"
   },
   "devDependencies": {
+    "@aws-cdk/aws-apigatewayv2": "^1.88.0",
+    "@aws-cdk/aws-dynamodb": "^1.88.0",
+    "@aws-cdk/aws-iam": "^1.88.0",
+    "@aws-cdk/aws-lambda": "^1.88.0",
     "@aws-cdk/aws-lambda-nodejs": "^1.88.0",
+    "@aws-cdk/aws-logs": "^1.88.0",
     "@aws-cdk/aws-s3-assets": "^1.88.0",
     "@aws-cdk/core": "^1.88.0",
     "@commitlint/cli": "^11.0.0",
     "@commitlint/config-conventional": "^11.0.0",
     "@types/archiver": "^5.1.0",
+    "@types/aws-lambda": "^8.10.72",
     "@types/fs-extra": "^9.0.6",
     "@types/minimatch": "^3.0.3",
     "@types/node": "^14.14.25",

@@ -1,3 +1,4 @@
+/* eslint-disable no-new */
 /* eslint-disable import/no-extraneous-dependencies */
 import {NodejsFunction, NodejsFunctionProps} from '@aws-cdk/aws-lambda-nodejs';
 import {Runtime} from '@aws-cdk/aws-lambda';
@@ -8,6 +9,7 @@ import * as cdk from '@aws-cdk/core';
 import {BuildOptions, Loader} from 'esbuild';
 import {readManifest} from './utils/readManifest';
 import {writeManifest} from './utils/writeManifest';
+import {RealTimeLambdaLogsAPI} from './RealTimeLambdaLogsAPI';
 
 type WatchableNodejsFunctionProps = NodejsFunctionProps;
 
@@ -51,6 +53,35 @@ class WatchableNodejsFunction extends NodejsFunction {
       banner: props.bundling?.banner,
       footer: props.bundling?.footer,
     };
+
+    const [rootStack] = this.parentStacks;
+    const logsApiId = 'CDKWatchWebsocketLogsApi';
+    const logsApi =
+      (rootStack.node.tryFindChild(logsApiId) as
+        | undefined
+        | RealTimeLambdaLogsAPI) ||
+      new RealTimeLambdaLogsAPI(rootStack, logsApiId);
+
+    this.addLayers(logsApi.logsLayerVersion);
+    this.addEnvironment(
+      'CDK_WATCH_CONNECTION_TABLE_NAME',
+      logsApi.CDK_WATCH_CONNECTION_TABLE_NAME,
+    );
+  }
+
+  /**
+   * Returns all the parents of this construct's  stack (i.e. if this construct
+   * is within a NestedStack etc etc).
+   */
+  private get parentStacks() {
+    const parents: cdk.Stack[] = [this.stack];
+    // Get all the nested stack parents into an array, the array will start with
+    // the root stack all the way to the stack holding the lambda as the last
+    // element in the array.
+    while (parents[0].nestedStackParent) {
+      parents.unshift(parents[0].nestedStackParent as cdk.Stack);
+    }
+    return parents;
   }
 
   /**
@@ -72,15 +103,7 @@ class WatchableNodejsFunction extends NodejsFunction {
     }
 
     const assetPath = path.join(session.outdir, asset.assetPath);
-    const parents: cdk.Stack[] = [this.stack];
-    // Get all the nested stack parents into an array, the array will start with
-    // the root stack all the way to the stack holding the lambda as the last
-    // element in the array.
-    while (parents[0].nestedStackParent) {
-      parents.unshift(parents[0].nestedStackParent as cdk.Stack);
-    }
-
-    const [rootStack, ...nestedStacks] = parents;
+    const [rootStack, ...nestedStacks] = this.parentStacks;
     const cdkWatchManifest = readManifest() || {
       region: this.stack.region,
       lambdas: {},
