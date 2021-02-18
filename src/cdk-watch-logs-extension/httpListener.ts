@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import * as http from 'http';
 
 export const listen = (port: number): {logsQueue: any[]} => {

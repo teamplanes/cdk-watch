@@ -1,0 +1,7 @@
+{
+  "rules": {
+    // Given we actually bundle everything at build/publish, we don't need
+    // dependencies to be installed by the user.
+    "import/no-extraneous-dependencies": 0
+  }
+}

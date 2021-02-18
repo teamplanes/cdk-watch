@@ -34,26 +34,13 @@ const SUBSCRIPTION_BODY = {
     maxItems: MAX_ITEMS,
   },
 };
-/**
 
-Note:
+enum EventType {
+  INVOKE = 'INVOKE',
+  SHUTDOWN = 'SHUTDOWN',
+}
 
-- This is a simple example extension to make you help start investigating the Lambda Runtime Logs API.
-This code is not production ready, and it has never intended to be. Use it with your own discretion after you tested
-it thoroughly.
-
-- Because of the asynchronous nature of the system, it is possible that logs for one invoke are
-processed during the next invoke slice. Likewise, it is possible that logs for the last invoke are processed during
-the SHUTDOWN event.
-
-*/
-
-const EventType = {
-  INVOKE: 'INVOKE',
-  SHUTDOWN: 'SHUTDOWN',
-};
-
-async function postToWS(postData) {
+const postToWS = async (postData) => {
   let connectionData;
 
   try {
@@ -71,7 +58,6 @@ async function postToWS(postData) {
   const postCalls =
     connectionData.Items &&
     connectionData.Items.map(async ({connectionId}) => {
-      console.log('sending to connectionId', connectionId);
       try {
         await apigwManagementApi
           .postToConnection({
@@ -81,7 +67,6 @@ async function postToWS(postData) {
           .promise();
       } catch (e) {
         if (e.statusCode === 410) {
-          console.log(`Found stale connection, deleting ${connectionId}`);
           await dynamoDb
             .delete({
               TableName: process.env.CONN_TABLE_NAME as string,
@@ -89,7 +74,6 @@ async function postToWS(postData) {
             })
             .promise();
         } else {
-          console.log('connectionData.Items.map ~ e', e);
           throw e;
         }
       }
@@ -98,15 +82,12 @@ async function postToWS(postData) {
   try {
     await Promise.all(postCalls || []);
   } catch (e) {
-    console.log('postToWS ~ e', e);
     return {statusCode: 500, body: e.stack};
   }
-}
+};
 
 // function for processing collected logs
-async function uploadLogs(logsQueue) {
-  console.log(`upload logs`);
-
+const uploadLogs = async (logsQueue) => {
   await new Promise((res) => setTimeout(res, TIMEOUT_MS));
   while (logsQueue.length > 0) {
     const newLogsQueue = [...logsQueue];
@@ -114,19 +95,16 @@ async function uploadLogs(logsQueue) {
     await postToWS(newLogsQueue);
     console.log(`logs sent`);
   }
-}
+};
 
-async function handleShutdown(event, logsQueue) {
-  console.log('shutdown', {event});
+const handleShutdown = async (event, logsQueue) => {
   await uploadLogs(logsQueue);
-
   process.exit(0);
-}
+};
 
-async function handleInvoke(event, logsQueue) {
-  console.log('invoke');
+const handleInvoke = async (event, logsQueue) => {
   await uploadLogs(logsQueue);
-}
+};
 
 (async function main() {
   const {logsQueue} = listen(RECEIVER_PORT);

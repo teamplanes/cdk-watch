@@ -1,4 +1,6 @@
+/* eslint-disable no-console */
 import * as path from 'path';
+import fetch from 'node-fetch';
 
 const baseUrl = `http://${process.env.AWS_LAMBDA_RUNTIME_API}/2020-01-01/extension`;
 
@@ -10,8 +12,6 @@ export const register = async (): Promise<any> => {
     }),
     headers: {
       'Content-Type': 'application/json',
-      // The extension name must match the file name of the extension itself that's in /opt/extensions/
-      // In this case that's: nodejs-example-logs-api-extension
       'Lambda-Extension-Name': path.basename(__dirname),
     },
   });
