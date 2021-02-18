@@ -60,48 +60,52 @@ export const watch = async (
           }
 
           logger.log('watching');
-          esbuildService.build({
-            ...lambdaManifest.esbuildOptions,
-            outfile: path.join(watchOutdir, 'index.js'),
-            // Unless explicitly told not to, turn on treeShaking and minify to
-            // improve upload times
-            treeShaking: lambdaManifest.esbuildOptions.treeShaking ?? true,
-            minify: lambdaManifest.esbuildOptions.minify ?? true,
-            // Keep the console clean from build warnings, only print errors
-            logLevel: lambdaManifest.esbuildOptions.logLevel ?? 'error',
-            watch: {
-              onRebuild: (error) => {
-                if (error) {
-                  logger.error(
-                    `failed to rebuild lambda function code ${error.toString()}`,
-                  );
-                  return;
-                }
+          esbuildService
+            .build({
+              ...lambdaManifest.esbuildOptions,
+              outfile: path.join(watchOutdir, 'index.js'),
+              // Unless explicitly told not to, turn on treeShaking and minify to
+              // improve upload times
+              treeShaking: lambdaManifest.esbuildOptions.treeShaking ?? true,
+              minify: lambdaManifest.esbuildOptions.minify ?? true,
+              // Keep the console clean from build warnings, only print errors
+              logLevel: lambdaManifest.esbuildOptions.logLevel ?? 'error',
+              watch: {
+                onRebuild: (error) => {
+                  if (error) {
+                    logger.error(
+                      `failed to rebuild lambda function code ${error.toString()}`,
+                    );
+                    return;
+                  }
 
-                const uploadingProgressText = 'uploading function code';
-                twisters.put(`${lambdaCdkPath}:uploading`, {
-                  meta: {prefix: logger.prefix},
-                  text: uploadingProgressText,
-                });
-
-                updateLambdaFunctionCode(watchOutdir, detail)
-                  .then(() => {
-                    twisters.put(`${lambdaCdkPath}:uploading`, {
-                      meta: {prefix: logger.prefix},
-                      text: uploadingProgressText,
-                      active: false,
-                    });
-                  })
-                  .catch((e) => {
-                    twisters.put(`${lambdaCdkPath}:uploading`, {
-                      text: uploadingProgressText,
-                      meta: {error: e},
-                      active: false,
-                    });
+                  const uploadingProgressText = 'uploading function code';
+                  twisters.put(`${lambdaCdkPath}:uploading`, {
+                    meta: {prefix: logger.prefix},
+                    text: uploadingProgressText,
                   });
+
+                  updateLambdaFunctionCode(watchOutdir, detail)
+                    .then(() => {
+                      twisters.put(`${lambdaCdkPath}:uploading`, {
+                        meta: {prefix: logger.prefix},
+                        text: uploadingProgressText,
+                        active: false,
+                      });
+                    })
+                    .catch((e) => {
+                      twisters.put(`${lambdaCdkPath}:uploading`, {
+                        text: uploadingProgressText,
+                        meta: {error: e},
+                        active: false,
+                      });
+                    });
+                },
               },
-            },
-          });
+            })
+            .catch((e: Error) => {
+              logger.error(`error building lambda: ${e.toString()}`);
+            });
         }),
       ),
     )

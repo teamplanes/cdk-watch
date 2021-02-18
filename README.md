@@ -99,4 +99,6 @@ For more info on each command add a `--help` flag after any one of them.
 - **Once:** `cdkw once "**"` updates your lambda's once, rather than in watch
 - **Logs:** `cdkw logs "**"` just tails logs for each of the matching lambdas
 
+---
+
 ✈️ / [planes.studio](https://planes.studio)

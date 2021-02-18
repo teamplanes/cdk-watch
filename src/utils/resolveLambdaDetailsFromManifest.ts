@@ -1,4 +1,4 @@
-import {CloudFormation, Lambda} from 'aws-sdk';
+import {CloudFormation} from 'aws-sdk';
 import {LambdaManifestType, CdkWatchManifest} from '../types.d';
 
 const resolveLambdaDetailFromManifest = async (

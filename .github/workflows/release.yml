@@ -1,7 +1,7 @@
 name: release
 on:
   push:
-    branches: [master, next]
+    branches: [main, next]
 jobs:
   release:
     runs-on: ubuntu-latest
@@ -40,14 +40,14 @@ jobs:
       - name: generate tag and release body (next)
         if: github.ref == 'refs/heads/next'
         run: |
-          yarn standard-version -i RELEASE_BODY.md --skip.commit
+          yarn standard-version -i RELEASE_BODY.md --skip.commit --prerelease next
           npm publish --tag next
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
-      # Only run on master branch
+      # Only run on main branch
       - name: generate tag and release body (latest)
-        if: github.ref == 'refs/heads/master'
+        if: github.ref == 'refs/heads/main'
         run: |
           yarn standard-version -i RELEASE_BODY.md --skip.commit
           npm publish
