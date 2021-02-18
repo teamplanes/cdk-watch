@@ -7,7 +7,7 @@ const resolveLambdaDetailFromManifest = async (
   detail: CloudFormation.StackResourceDetail;
   lambdaManifest: LambdaManifestType;
 }> => {
-  const cfn = new CloudFormation();
+  const cfn = new CloudFormation({maxRetries: 10});
   const lambdaStackName = await lambdaManifest.nestedStackLogicalIds.reduce(
     (promise, nextNestedStack) =>
       promise.then((stackName) =>
