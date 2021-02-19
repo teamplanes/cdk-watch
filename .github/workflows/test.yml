@@ -1,5 +1,6 @@
 name: test
-on: [push, pull_request]
+on:
+  pull_request: [edited]
 jobs:
   release:
     runs-on: ubuntu-latest
