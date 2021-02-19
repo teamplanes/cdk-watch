@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import {program, Option, Command} from 'commander';
+import {program, Option} from 'commander';
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import {list} from './commands/list';
@@ -27,7 +27,8 @@ const cdkAppOption = new Option(
   'pass the --app option to the underlying synth command',
 );
 
-const mainWatchCommand = program
+program
+  .command('watch', {isDefault: true})
   .arguments('<pathGlob>')
   .description(
     'for each lambda matched by the path glob, watch the source-code and redeploy on change',
@@ -37,17 +38,16 @@ const mainWatchCommand = program
     `\nExample:
   $ cdkw "**"
   $ cdkw "MyStack/API/**"
-  $ cdkw --profile=planes --no-logs "**"\n`,
+  $ cdkw "**" --profile=planes --no-logs\n`,
   )
-  .passThroughOptions()
   .addOption(cdkContextOption)
   .addOption(profileOption)
   .addOption(cdkAppOption)
   .addOption(logsOption)
   .action(watch);
 
-const logsCommand = new Command('logs');
-logsCommand
+program
+  .command('logs')
   .arguments('<pathGlob>')
   .description(
     'for each lambda matched by the path glob, poll the associated log groups',
@@ -56,8 +56,8 @@ logsCommand
   .addOption(profileOption)
   .action(logs);
 
-const onceCommand = new Command('once');
-onceCommand
+program
+  .command('once')
   .arguments('<pathGlob>')
   .description(
     'for each lambda matched by the path glob, build and deploy the source code once',
@@ -66,8 +66,8 @@ onceCommand
   .addOption(profileOption)
   .action(once);
 
-const listCommand = new Command('list');
-listCommand
+program
+  .command('list')
   .alias('ls')
   .arguments('<pathGlob>')
   .description('list all lambdas matching the path glob')
@@ -75,10 +75,7 @@ listCommand
   .addOption(profileOption)
   .action(list);
 
-mainWatchCommand.addCommand(logsCommand);
-mainWatchCommand.addCommand(onceCommand);
-mainWatchCommand.addCommand(listCommand);
-mainWatchCommand.parseAsync(process.argv).catch((e) => {
+program.parseAsync(process.argv).catch((e) => {
   // eslint-disable-next-line no-console
   console.log(e);
   process.exit(1);
