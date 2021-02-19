@@ -24,7 +24,7 @@ export const onConnect = async (
     };
 
   const putParams = lambdaIds.map((lambdaId: string) => ({
-    TableName: process.env.CONN_TABLE_NAME as string,
+    TableName: process.env.CDK_WATCH_CONNECTION_TABLE_NAME as string,
     Item: {
       connectionId: event.requestContext.connectionId,
       lambdaId,
@@ -49,7 +49,7 @@ export const onDisconnect = async (
   try {
     await dynamoDb
       .delete({
-        TableName: process.env.CONN_TABLE_NAME as string,
+        TableName: process.env.CDK_WATCH_CONNECTION_TABLE_NAME as string,
         Key: {
           connectionId: event.requestContext.connectionId,
         },

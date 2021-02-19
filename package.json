@@ -13,8 +13,8 @@
   "scripts": {
     "type-check": "tsc -p tsconfig.json --noEmit",
     "bundle-extension": "esbuild src/cdk-watch-logs-extension/index.ts --platform=node --target=node10 --bundle --outfile=cdk-watch-logs-extension/cdk-watch-logs-extension/index.js --sourcemap=inline --minify",
-    "build": "tsc -p tsconfig.json && yarn bundle-extension",
-    "lint": "eslint . --ext=.ts",
+    "build": "yarn bundle-extension && tsc -p tsconfig.json",
+    "lint": "eslint ./src --ext=.ts",
     "try": "node -r ts-node/register src/cli.ts",
     "postinstall": "husky install",
     "prepublishOnly": "yarn build && pinst --disable",
@@ -80,7 +80,7 @@
     "prettier-config-planes": "^1.0.1",
     "standard-version": "^9.1.0",
     "ts-node": "^9.1.1",
-    "typescript": "^4.1.3"
+    "typescript": "~4.0.0"
   },
   "prettier": "prettier-config-planes",
   "eslintConfig": {

@@ -5,6 +5,8 @@ import * as AWS from 'aws-sdk';
 import {register, next} from './extensionsApi';
 import {subscribe} from './logsApi';
 import {listen} from './httpListener';
+import {LogsQueueLog} from './interfaces';
+import {TIMEOUT_MS, RECEIVER_PORT} from './consts';
 
 const dynamoDb = new AWS.DynamoDB.DocumentClient({
   apiVersion: '2012-08-10',
@@ -13,47 +15,36 @@ const dynamoDb = new AWS.DynamoDB.DocumentClient({
 
 const apigwManagementApi = new AWS.ApiGatewayManagementApi({
   apiVersion: '2018-11-29',
-  endpoint: process.env.API_GATEWAY_ENDPOINT,
+  endpoint: process.env.CDK_WATCH_API_GATEWAY_MANAGEMENT_URL,
 });
-
-// Subscribe to platform logs and receive them on ${local_ip}:4243 via HTTP protocol.
-const RECEIVER_PORT = 4243;
-const TIMEOUT_MS = 100; // Maximum time (in milliseconds) that a batch is buffered.
-const MAX_BYTES = 262144; // Maximum size in bytes that the logs are buffered in memory.
-const MAX_ITEMS = 1000; // Maximum number of events that are buffered in memory.
-
-const SUBSCRIPTION_BODY = {
-  destination: {
-    protocol: 'HTTP',
-    URI: `http://sandbox:${RECEIVER_PORT}`,
-  },
-  types: ['function', 'platform'],
-  buffering: {
-    timeoutMs: TIMEOUT_MS,
-    maxBytes: MAX_BYTES,
-    maxItems: MAX_ITEMS,
-  },
-};
+console.log(
+  '🚀 ~ file: index.ts ~ line 20 ~ process.env.CDK_WATCH_API_GATEWAY_MANAGEMENT_URL',
+  process.env.CDK_WATCH_API_GATEWAY_MANAGEMENT_URL,
+);
 
 enum EventType {
   INVOKE = 'INVOKE',
   SHUTDOWN = 'SHUTDOWN',
 }
 
-const postToWS = async (postData) => {
+const postToWS = async (postData: LogsQueueLog[]) => {
   let connectionData;
 
   try {
     connectionData = await dynamoDb
       .scan({
-        TableName: process.env.CONN_TABLE_NAME as string,
+        TableName: process.env.CDK_WATCH_CONNECTION_TABLE_NAME as string,
         ProjectionExpression: 'connectionId',
       })
       .promise();
   } catch (e) {
-    console.log('postToWS: scan ~ e', e);
+    console.error(e);
     return {statusCode: 500, body: e.stack};
   }
+  console.log(
+    '🚀 ~ file: index.ts ~ line 71 ~ postToWS ~ connectionData.Items',
+    connectionData.Items,
+  );
 
   const postCalls =
     connectionData.Items &&
@@ -69,7 +60,7 @@ const postToWS = async (postData) => {
         if (e.statusCode === 410) {
           await dynamoDb
             .delete({
-              TableName: process.env.CONN_TABLE_NAME as string,
+              TableName: process.env.CDK_WATCH_CONNECTION_TABLE_NAME as string,
               Key: {connectionId},
             })
             .promise();
@@ -82,58 +73,51 @@ const postToWS = async (postData) => {
   try {
     await Promise.all(postCalls || []);
   } catch (e) {
+    console.log('🚀 ~ file: index.ts ~ line 111 ~ postToWS ~ e', e);
     return {statusCode: 500, body: e.stack};
   }
 };
 
-// function for processing collected logs
-const uploadLogs = async (logsQueue) => {
+const uploadLogs = async (logsQueue: LogsQueueLog[]) => {
   await new Promise((res) => setTimeout(res, TIMEOUT_MS));
   while (logsQueue.length > 0) {
     const newLogsQueue = [...logsQueue];
     logsQueue.splice(0);
     await postToWS(newLogsQueue);
-    console.log(`logs sent`);
   }
 };
 
-const handleShutdown = async (event, logsQueue) => {
+const handleShutdown = async (logsQueue: LogsQueueLog[]) => {
   await uploadLogs(logsQueue);
   process.exit(0);
 };
 
-const handleInvoke = async (event, logsQueue) => {
+const handleInvoke = async (logsQueue: LogsQueueLog[]) => {
+  console.log(
+    '🚀 ~ file: index.ts ~ line 91 ~ handleInvoke ~ logsQueue',
+    logsQueue,
+  );
   await uploadLogs(logsQueue);
 };
 
 (async function main() {
   const {logsQueue} = listen(RECEIVER_PORT);
-  process.on('SIGINT', () => handleShutdown('SIGINT', logsQueue));
-  process.on('SIGTERM', () => handleShutdown('SIGTERM', logsQueue));
-  process.on('uncaughtException', (err) => {
-    handleShutdown('uncaughtException', logsQueue);
-  });
+  process.on('SIGINT', () => handleShutdown(logsQueue));
+  process.on('SIGTERM', () => handleShutdown(logsQueue));
 
-  console.log('register');
   const extensionId = await register();
-  console.log('extensionId', extensionId);
-
-  console.log('subscribing listener');
-  // subscribing listener to the Logs API
-  await subscribe(extensionId, SUBSCRIPTION_BODY);
+  await subscribe(extensionId);
 
   // execute extensions logic
   while (true) {
-    console.log('next');
     const event = await next(extensionId);
-    console.log('event', event);
 
     switch (event.eventType) {
       case EventType.SHUTDOWN:
-        await handleShutdown(event, logsQueue);
+        await handleShutdown(logsQueue);
         break;
       case EventType.INVOKE:
-        await handleInvoke(event, logsQueue);
+        await handleInvoke(logsQueue);
         break;
       default:
         throw new Error(`unknown event: ${event.eventType}`);

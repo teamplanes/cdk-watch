@@ -7,8 +7,9 @@ import * as path from 'path';
 import findUp from 'find-up';
 import * as cdk from '@aws-cdk/core';
 import {BuildOptions, Loader} from 'esbuild';
-import {readManifest} from './utils/readManifest';
-import {writeManifest} from './utils/writeManifest';
+import {CfnOutput} from '@aws-cdk/core';
+import {readManifest} from '../utils/readManifest';
+import {writeManifest} from '../utils/writeManifest';
 import {RealTimeLambdaLogsAPI} from './RealTimeLambdaLogsAPI';
 
 type WatchableNodejsFunctionProps = NodejsFunctionProps;
@@ -63,9 +64,15 @@ class WatchableNodejsFunction extends NodejsFunction {
       new RealTimeLambdaLogsAPI(rootStack, logsApiId);
 
     this.addLayers(logsApi.logsLayerVersion);
+    this.addToRolePolicy(logsApi.executeApigwPolicy);
+    this.addToRolePolicy(logsApi.lambdaDynamoConnectionPolicy);
     this.addEnvironment(
       'CDK_WATCH_CONNECTION_TABLE_NAME',
       logsApi.CDK_WATCH_CONNECTION_TABLE_NAME,
+    );
+    this.addEnvironment(
+      'CDK_WATCH_API_GATEWAY_ENDPOINT',
+      logsApi.CDK_WATCH_API_GATEWAY_MANAGEMENT_URL,
     );
   }
 

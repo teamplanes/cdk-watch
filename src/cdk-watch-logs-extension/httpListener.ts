@@ -1,8 +1,9 @@
 /* eslint-disable no-console */
 import * as http from 'http';
+import {LogsQueueLog} from './interfaces';
 
-export const listen = (port: number): {logsQueue: any[]} => {
-  const logsQueue: any[] = [];
+export const listen = (port: number): {logsQueue: LogsQueueLog[]} => {
+  const logsQueue: LogsQueueLog[] = [];
   // init HTTP server for the Logs API subscription
   const server = http.createServer((request, response) => {
     if (request.method === 'POST') {

@@ -9,7 +9,7 @@ export class LogsLayerVersion extends LayerVersion {
       description:
         'Listens to Lambda Logs and sends them to API Gateway Connections',
       code: Code.fromAsset(
-        path.join(__dirname, './nodejs-example-logs-api-extension'),
+        path.join(__dirname, '../..', 'cdk-watch-logs-extension'),
       ),
     });
   }
