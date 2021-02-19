@@ -1,6 +1,7 @@
 name: test
 on:
-  pull_request: [edited]
+  pull_request:
+    types: [edited]
 jobs:
   release:
     runs-on: ubuntu-latest
