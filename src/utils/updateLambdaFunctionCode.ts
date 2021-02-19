@@ -6,7 +6,7 @@ export const updateLambdaFunctionCode = async (
   watchOutdir: string,
   detail: CloudFormation.StackResourceDetail,
 ): Promise<PromiseResult<Lambda.FunctionConfiguration, AWSError>> => {
-  const lambda = new Lambda();
+  const lambda = new Lambda({maxRetries: 10});
   return zipDirectory(watchOutdir).then((zip) => {
     return lambda
       .updateFunctionCode({
