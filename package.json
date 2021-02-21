@@ -17,7 +17,8 @@
     "postinstall": "husky install",
     "prepublishOnly": "yarn build && pinst --disable",
     "postpublish": "pinst --enable",
-    "release": "standard-version"
+    "release": "standard-version",
+    "test": "jest"
   },
   "author": {
     "name": "Henry Kirkness",
