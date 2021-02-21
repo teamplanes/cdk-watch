@@ -11,7 +11,7 @@ import {CdkWatchCommand} from '..';
 
 const buildArgv = (cmd: string) => ['/path/to/node', 'cdkw', ...cmd.split(' ')];
 
-describe('commands CLI', () => {
+describe('CLI commands', () => {
   beforeEach(() => {
     jest.resetAllMocks();
   });
@@ -54,19 +54,17 @@ describe('commands CLI', () => {
   );
 
   test.each`
-    flag                                       | expected
-    ${'-c foo=bar'}                            | ${['foo=bar']}
-    ${'--context foo=bar'}                     | ${['foo=bar']}
-    ${'-c foo=bar -c foo1=bar1'}               | ${['foo=bar', 'foo1=bar1']}
-    ${'--context foo=bar --context foo1=bar1'} | ${['foo=bar', 'foo1=bar1']}
+    flag           | expected
+    ${''}          | ${true}
+    ${'--no-logs'} | ${false}
   `(
-    'context flags are passed through to the command function',
+    'logs are on by default but can be turned off',
     async ({flag, expected}) => {
       const program = new CdkWatchCommand();
       await program.parseAsync(buildArgv(`watch My/Path ${flag}`));
       expect(watch).toBeCalledWith(
         'My/Path',
-        {logs: true, context: expected},
+        {logs: expected},
         expect.anything(),
       );
     },
