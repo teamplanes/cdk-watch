@@ -62,7 +62,6 @@ describe('commands CLI', () => {
   `(
     'context flags are passed through to the command function',
     async ({flag, expected}) => {
-      (watch as jest.Mock).mockReset();
       const program = new CdkWatchCommand();
       await program.parseAsync(buildArgv(`watch My/Path ${flag}`));
       expect(watch).toBeCalledWith(
