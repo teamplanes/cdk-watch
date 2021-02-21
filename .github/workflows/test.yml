@@ -1,5 +1,8 @@
 name: test
-on: [push]
+on:
+  push:
+  pull_request_target:
+    types: [synchronize]
 jobs:
   release:
     runs-on: ubuntu-latest

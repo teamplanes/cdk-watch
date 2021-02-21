@@ -9,7 +9,7 @@
   "bin": {
     "cdkw": "lib/cli.js"
   },
-  "version": "0.0.15-next.5",
+  "version": "0.0.16-next.11",
   "scripts": {
     "type-check": "tsc -p tsconfig.json --noEmit",
     "bundle-extension": "esbuild src/cdk-watch-logs-extension/index.ts --platform=node --target=node10 --bundle --outfile=cdk-watch-logs-extension/cdk-watch-logs-extension/index.js --sourcemap=inline --minify",

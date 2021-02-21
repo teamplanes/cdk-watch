@@ -41,7 +41,10 @@ $ yarn cdkw "**"
 $ yarn cdkw "MyStack/API/**"
 
 # Run without logs
-$ yarn cdkw --no-logs "MyStack/API/**"
+$ yarn cdkw "MyStack/API/**" --no-logs
+
+# Pass context to synth
+$ yarn cdkw "MyStack/API/**" -c foo=bar -c hello=world
 
 # If you are using npm
 $ npm run cdkw "**"
