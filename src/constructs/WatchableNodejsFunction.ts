@@ -3,16 +3,30 @@
 import {NodejsFunction, NodejsFunctionProps} from '@aws-cdk/aws-lambda-nodejs';
 import {Runtime} from '@aws-cdk/aws-lambda';
 import {Asset} from '@aws-cdk/aws-s3-assets';
+import {Bucket} from '@aws-cdk/aws-s3';
 import * as path from 'path';
 import findUp from 'find-up';
 import * as cdk from '@aws-cdk/core';
 import {BuildOptions, Loader} from 'esbuild';
-import {CfnOutput} from '@aws-cdk/core';
+import {RemovalPolicy} from '@aws-cdk/core';
 import {readManifest} from '../utils/readManifest';
 import {writeManifest} from '../utils/writeManifest';
 import {RealTimeLambdaLogsAPI} from './RealTimeLambdaLogsAPI';
+import {CDK_WATCH_CONTEXT_LOGS_ENABLED} from '../consts';
 
-type WatchableNodejsFunctionProps = NodejsFunctionProps;
+interface WatchableNodejsFunctionProps extends NodejsFunctionProps {
+  /**
+   * CDK Watch Options
+   */
+  watchOptions?: {
+    /**
+     * Default: `false`
+     * Set to true to enable this construct to create all the
+     * required infrastructure for realtime logging
+     */
+    realTimeLoggingEnabled?: boolean;
+  };
+}
 
 /**
  * `extends` NodejsFunction and behaves the same, however `entry` is a required
@@ -21,6 +35,8 @@ type WatchableNodejsFunctionProps = NodejsFunctionProps;
  */
 class WatchableNodejsFunction extends NodejsFunction {
   public esbuildOptions: BuildOptions;
+
+  public cdkWatchLogsApi?: RealTimeLambdaLogsAPI;
 
   constructor(
     scope: cdk.Construct,
@@ -55,25 +71,30 @@ class WatchableNodejsFunction extends NodejsFunction {
       footer: props.bundling?.footer,
     };
 
-    const [rootStack] = this.parentStacks;
-    const logsApiId = 'CDKWatchWebsocketLogsApi';
-    const logsApi =
-      (rootStack.node.tryFindChild(logsApiId) as
-        | undefined
-        | RealTimeLambdaLogsAPI) ||
-      new RealTimeLambdaLogsAPI(rootStack, logsApiId);
+    if (
+      scope.node.tryGetContext(CDK_WATCH_CONTEXT_LOGS_ENABLED) ||
+      props.watchOptions?.realTimeLoggingEnabled
+    ) {
+      const [rootStack] = this.parentStacks;
+      const logsApiId = 'CDKWatchWebsocketLogsApi';
+      this.cdkWatchLogsApi =
+        (rootStack.node.tryFindChild(logsApiId) as
+          | undefined
+          | RealTimeLambdaLogsAPI) ||
+        new RealTimeLambdaLogsAPI(rootStack, logsApiId);
 
-    this.addLayers(logsApi.logsLayerVersion);
-    this.addToRolePolicy(logsApi.executeApigwPolicy);
-    this.addToRolePolicy(logsApi.lambdaDynamoConnectionPolicy);
-    this.addEnvironment(
-      'CDK_WATCH_CONNECTION_TABLE_NAME',
-      logsApi.CDK_WATCH_CONNECTION_TABLE_NAME,
-    );
-    this.addEnvironment(
-      'CDK_WATCH_API_GATEWAY_ENDPOINT',
-      logsApi.CDK_WATCH_API_GATEWAY_MANAGEMENT_URL,
-    );
+      this.addLayers(this.cdkWatchLogsApi.logsLayerVersion);
+      this.addToRolePolicy(this.cdkWatchLogsApi.executeApigwPolicy);
+      this.addToRolePolicy(this.cdkWatchLogsApi.lambdaDynamoConnectionPolicy);
+      this.addEnvironment(
+        'CDK_WATCH_CONNECTION_TABLE_NAME',
+        this.cdkWatchLogsApi.CDK_WATCH_CONNECTION_TABLE_NAME,
+      );
+      this.addEnvironment(
+        'CDK_WATCH_API_GATEWAY_MANAGEMENT_URL',
+        this.cdkWatchLogsApi.CDK_WATCH_API_GATEWAY_MANAGEMENT_URL,
+      );
+    }
   }
 
   /**

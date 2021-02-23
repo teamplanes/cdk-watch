@@ -2,7 +2,10 @@
 import * as http from 'http';
 import {LogsQueueLog} from './interfaces';
 
-export const listen = (port: number): {logsQueue: LogsQueueLog[]} => {
+export const listen = (
+  port: number,
+  callback: (logs: any) => void,
+): {logsQueue: LogsQueueLog[]} => {
   const logsQueue: LogsQueueLog[] = [];
   // init HTTP server for the Logs API subscription
   const server = http.createServer((request, response) => {
@@ -11,11 +14,11 @@ export const listen = (port: number): {logsQueue: LogsQueueLog[]} => {
       request.on('data', (data) => {
         body += data;
       });
-      request.on('end', () => {
+      request.on('end', async () => {
         try {
           const batch = JSON.parse(body);
           if (batch.length > 0) {
-            logsQueue.push(...batch);
+            batch.forEach(callback);
           }
         } catch (e) {
           console.error('failed to parse logs', e);
