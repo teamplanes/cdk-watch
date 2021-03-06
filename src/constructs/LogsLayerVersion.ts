@@ -7,10 +7,8 @@ export class LogsLayerVersion extends LayerVersion {
     super(scope, id, {
       removalPolicy: RemovalPolicy.DESTROY,
       description:
-        'Listens to Lambda Logs and sends them to API Gateway Connections',
-      code: Code.fromAsset(
-        path.join(__dirname, '../..', 'cdk-watch-logs-extension'),
-      ),
+        'Catches Lambda Logs and sends them to API Gateway Connections',
+      code: Code.fromAsset(path.join(__dirname, '../', 'lambda-extension')),
     });
   }
 }

@@ -3,12 +3,10 @@
 import {NodejsFunction, NodejsFunctionProps} from '@aws-cdk/aws-lambda-nodejs';
 import {Runtime} from '@aws-cdk/aws-lambda';
 import {Asset} from '@aws-cdk/aws-s3-assets';
-import {Bucket} from '@aws-cdk/aws-s3';
 import * as path from 'path';
 import findUp from 'find-up';
 import * as cdk from '@aws-cdk/core';
 import {BuildOptions, Loader} from 'esbuild';
-import {RemovalPolicy} from '@aws-cdk/core';
 import {readManifest} from '../utils/readManifest';
 import {writeManifest} from '../utils/writeManifest';
 import {RealTimeLambdaLogsAPI} from './RealTimeLambdaLogsAPI';
@@ -83,6 +81,10 @@ class WatchableNodejsFunction extends NodejsFunction {
           | RealTimeLambdaLogsAPI) ||
         new RealTimeLambdaLogsAPI(rootStack, logsApiId);
 
+      this.addEnvironment(
+        'AWS_LAMBDA_EXEC_WRAPPER',
+        '/opt/cdk-watch-lambda-wrapper/index.js',
+      );
       this.addLayers(this.cdkWatchLogsApi.logsLayerVersion);
       this.addToRolePolicy(this.cdkWatchLogsApi.executeApigwPolicy);
       this.addToRolePolicy(this.cdkWatchLogsApi.lambdaDynamoConnectionPolicy);

@@ -1,3 +1,0 @@
-#!/bin/bash
-set -euo pipefail
-exec "/opt/cdk-watch-logs-extension/index.js"
