@@ -6,6 +6,8 @@ export interface LambdaManifestType {
   lambdaLogicalId: string;
   rootStackName: string;
   nestedStackLogicalIds: string[];
+  realTimeLogsApiLogicalId: string | undefined;
+  realTimeLogsStackLogicalId: string | undefined;
 }
 
 export interface CdkWatchManifest {

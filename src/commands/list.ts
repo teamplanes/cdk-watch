@@ -1,8 +1,8 @@
 import chalk from 'chalk';
 import OS from 'os';
-import {filterManifestByPath} from '../utils/filterManifestByPath';
-import {readManifest} from '../utils/readManifest';
-import {runSynth} from '../utils/runSynth';
+import {filterManifestByPath} from '../lib/filterManifestByPath';
+import {readManifest} from '../lib/readManifest';
+import {runSynth} from '../lib/runSynth';
 
 export const list = async (
   pathGlob: string | undefined,

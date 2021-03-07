@@ -1,5 +1,6 @@
 import {CloudFormation} from 'aws-sdk';
 import {LambdaManifestType, CdkWatchManifest} from '../types.d';
+import {resolveStackNameForLambda} from './resolveStackNameForLambda';
 
 const resolveLambdaDetailFromManifest = async (
   lambdaManifest: LambdaManifestType,
@@ -8,22 +9,7 @@ const resolveLambdaDetailFromManifest = async (
   lambdaManifest: LambdaManifestType;
 }> => {
   const cfn = new CloudFormation({maxRetries: 10});
-  const lambdaStackName = await lambdaManifest.nestedStackLogicalIds.reduce(
-    (promise, nextNestedStack) =>
-      promise.then((stackName) =>
-        cfn
-          .describeStackResource({
-            StackName: stackName,
-            LogicalResourceId: nextNestedStack,
-          })
-          .promise()
-          .then(
-            (result) =>
-              result.StackResourceDetail?.PhysicalResourceId as string,
-          ),
-      ),
-    Promise.resolve(lambdaManifest.rootStackName),
-  );
+  const lambdaStackName = await resolveStackNameForLambda(lambdaManifest);
 
   return cfn
     .describeStackResource({

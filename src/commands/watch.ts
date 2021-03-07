@@ -1,15 +1,15 @@
 import * as path from 'path';
 import * as esbuild from 'esbuild';
-import {copyCdkAssetToWatchOutdir} from '../utils/copyCdkAssetToWatchOutdir';
-import {filterManifestByPath} from '../utils/filterManifestByPath';
-import {initAwsSdk} from '../utils/initAwsSdk';
-import {readManifest} from '../utils/readManifest';
-import {resolveLambdaDetailsFromManifest} from '../utils/resolveLambdaDetailsFromManifest';
-import {runSynth} from '../utils/runSynth';
-import {tailLogsForLambda} from '../utils/tailLogsForLambda';
-import {updateLambdaFunctionCode} from '../utils/updateLambdaFunctionCode';
-import {createCLILoggerForLambda} from '../utils/createCLILoggerForLambda';
-import {twisters} from '../utils/twisters';
+import {copyCdkAssetToWatchOutdir} from '../lib/copyCdkAssetToWatchOutdir';
+import {filterManifestByPath} from '../lib/filterManifestByPath';
+import {initAwsSdk} from '../lib/initAwsSdk';
+import {readManifest} from '../lib/readManifest';
+import {resolveLambdaDetailsFromManifest} from '../lib/resolveLambdaDetailsFromManifest';
+import {runSynth} from '../lib/runSynth';
+import {tailCloudWatchLogsForLambda} from '../lib/tailLogsForLambda/tailCloudWatchLogsForLambda';
+import {updateLambdaFunctionCode} from '../lib/updateLambdaFunctionCode';
+import {createCLILoggerForLambda} from '../lib/createCLILoggerForLambda';
+import {twisters} from '../lib/twisters';
 
 export const watch = async (
   pathGlob: string,
@@ -50,7 +50,7 @@ export const watch = async (
           const logger = createCLILoggerForLambda(lambdaCdkPath);
           const watchOutdir = copyCdkAssetToWatchOutdir(lambdaManifest);
           if (options.logs) {
-            tailLogsForLambda(detail)
+            tailCloudWatchLogsForLambda(detail)
               .on('log', (log) => {
                 logger.log(log.toString());
               })

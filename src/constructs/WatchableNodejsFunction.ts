@@ -7,8 +7,9 @@ import * as path from 'path';
 import findUp from 'find-up';
 import * as cdk from '@aws-cdk/core';
 import {BuildOptions, Loader} from 'esbuild';
-import {readManifest} from '../utils/readManifest';
-import {writeManifest} from '../utils/writeManifest';
+import {CfnElement} from '@aws-cdk/core';
+import {readManifest} from '../lib/readManifest';
+import {writeManifest} from '../lib/writeManifest';
 import {RealTimeLambdaLogsAPI} from './RealTimeLambdaLogsAPI';
 import {CDK_WATCH_CONTEXT_LOGS_ENABLED} from '../consts';
 
@@ -139,12 +140,21 @@ class WatchableNodejsFunction extends NodejsFunction {
       lambdas: {},
     };
     cdkWatchManifest.region = this.stack.region;
+
     cdkWatchManifest.lambdas =
       typeof cdkWatchManifest.lambdas === 'object'
         ? cdkWatchManifest.lambdas
         : {};
     cdkWatchManifest.lambdas[this.node.path] = {
       assetPath,
+      realTimeLogsStackLogicalId: this.cdkWatchLogsApi
+        ? this.stack.getLogicalId(
+            this.cdkWatchLogsApi.nestedStackResource as CfnElement,
+          )
+        : undefined,
+      realTimeLogsApiLogicalId: this.cdkWatchLogsApi?.websocketApi
+        ? this.stack.getLogicalId(this.cdkWatchLogsApi.websocketApi)
+        : undefined,
       esbuildOptions: this.esbuildOptions,
       lambdaLogicalId: this.stack.getLogicalId(
         this.node.defaultChild as cdk.CfnResource,

@@ -1,11 +1,11 @@
-import {filterManifestByPath} from '../utils/filterManifestByPath';
-import {initAwsSdk} from '../utils/initAwsSdk';
-import {readManifest} from '../utils/readManifest';
-import {resolveLambdaDetailsFromManifest} from '../utils/resolveLambdaDetailsFromManifest';
-import {runSynth} from '../utils/runSynth';
-import {updateLambdaFunctionCode} from '../utils/updateLambdaFunctionCode';
-import {createCLILoggerForLambda} from '../utils/createCLILoggerForLambda';
-import {twisters} from '../utils/twisters';
+import {filterManifestByPath} from '../lib/filterManifestByPath';
+import {initAwsSdk} from '../lib/initAwsSdk';
+import {readManifest} from '../lib/readManifest';
+import {resolveLambdaDetailsFromManifest} from '../lib/resolveLambdaDetailsFromManifest';
+import {runSynth} from '../lib/runSynth';
+import {updateLambdaFunctionCode} from '../lib/updateLambdaFunctionCode';
+import {createCLILoggerForLambda} from '../lib/createCLILoggerForLambda';
+import {twisters} from '../lib/twisters';
 
 export const once = async (
   pathGlob: string,

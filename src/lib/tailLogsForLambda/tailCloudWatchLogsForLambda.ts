@@ -10,7 +10,7 @@ interface LogEventEmitter extends EventEmitter {
   on(event: 'error', cb: (error: Error) => void): this;
 }
 
-export const tailLogsForLambda = (
+export const tailCloudWatchLogsForLambda = (
   lambdaDetail: CloudFormation.StackResourceDetail,
 ): LogEventEmitter => {
   const logGroupName = `/aws/lambda/${lambdaDetail.PhysicalResourceId}`;

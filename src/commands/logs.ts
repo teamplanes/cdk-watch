@@ -1,10 +1,11 @@
-import {filterManifestByPath} from '../utils/filterManifestByPath';
-import {initAwsSdk} from '../utils/initAwsSdk';
-import {readManifest} from '../utils/readManifest';
-import {resolveLambdaDetailsFromManifest} from '../utils/resolveLambdaDetailsFromManifest';
-import {runSynth} from '../utils/runSynth';
-import {tailLogsForLambda} from '../utils/tailLogsForLambda';
-import {createCLILoggerForLambda} from '../utils/createCLILoggerForLambda';
+import {filterManifestByPath} from '../lib/filterManifestByPath';
+import {initAwsSdk} from '../lib/initAwsSdk';
+import {readManifest} from '../lib/readManifest';
+import {resolveLambdaDetailsFromManifest} from '../lib/resolveLambdaDetailsFromManifest';
+import {runSynth} from '../lib/runSynth';
+import {tailCloudWatchLogsForLambda} from '../lib/tailLogsForLambda/tailCloudWatchLogsForLambda';
+import {createCLILoggerForLambda} from '../lib/createCLILoggerForLambda';
+import {resolveLogEndpointDetailsFromManifest} from '../lib/resolveLogEndpointDetailsFromManifest';
 
 export const logs = async (
   pathGlob: string,
@@ -25,12 +26,15 @@ export const logs = async (
   initAwsSdk(manifest.region, options.profile);
   const filteredManifest = filterManifestByPath(pathGlob, manifest);
 
-  resolveLambdaDetailsFromManifest(filteredManifest)
-    .then((lambdaDetails) =>
+  Promise.all([
+    resolveLambdaDetailsFromManifest(filteredManifest),
+    resolveLogEndpointDetailsFromManifest(filteredManifest),
+  ])
+    .then(([lambdaDetails]) =>
       Promise.all(
         lambdaDetails.map(async ({detail, lambdaCdkPath}) => {
           const logger = createCLILoggerForLambda(lambdaCdkPath);
-          tailLogsForLambda(detail)
+          tailCloudWatchLogsForLambda(detail)
             .on('log', (log) => {
               logger.log(log.toString());
             })
