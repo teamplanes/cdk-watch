@@ -3,8 +3,7 @@
   "main": "lib/index.js",
   "files": [
     "lib",
-    "package.json",
-    "cdk-watch-logs-extension"
+    "package.json"
   ],
   "bin": {
     "cdkw": "lib/cli.js"
