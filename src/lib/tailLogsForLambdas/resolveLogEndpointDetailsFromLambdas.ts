@@ -1,24 +1,23 @@
 import {ApiGatewayV2, CloudFormation} from 'aws-sdk';
-import {CdkWatchManifest} from '../types.d';
+import {LambdaDetail} from '../../types.d';
 
 // @todo: optimise - potentially by memoizing calls for resources
-export const resolveLogEndpointDetailsFromManifest = async (
-  manifest: CdkWatchManifest,
+export const resolveLogEndpointDetailsFromLambdas = async (
+  lambdas: LambdaDetail[],
 ): Promise<{[lambdaPath: string]: string | undefined}> => {
   const cfn = new CloudFormation({maxRetries: 10});
   const apigw = new ApiGatewayV2({maxRetries: 10});
   return Promise.all(
-    Object.keys(manifest.lambdas).map(async (key) => {
-      const lambda = manifest.lambdas[key];
+    lambdas.map(async (lambda) => {
       if (
-        !lambda.realTimeLogsStackLogicalId ||
-        !lambda.realTimeLogsApiLogicalId
+        !lambda.lambdaManifest.realTimeLogsStackLogicalId ||
+        !lambda.lambdaManifest.realTimeLogsApiLogicalId
       )
-        return [key, undefined];
+        return [lambda.lambdaCdkPath, undefined];
       const logsStackResource = await cfn
         .describeStackResource({
-          StackName: lambda.rootStackName,
-          LogicalResourceId: lambda.realTimeLogsStackLogicalId,
+          StackName: lambda.lambdaManifest.rootStackName,
+          LogicalResourceId: lambda.lambdaManifest.realTimeLogsStackLogicalId,
         })
         .promise();
 
@@ -30,7 +29,7 @@ export const resolveLogEndpointDetailsFromManifest = async (
       const logsApiResource = await cfn
         .describeStackResource({
           StackName: logsStackResource.StackResourceDetail?.PhysicalResourceId,
-          LogicalResourceId: lambda.realTimeLogsApiLogicalId,
+          LogicalResourceId: lambda.lambdaManifest.realTimeLogsApiLogicalId,
         })
         .promise();
 
@@ -46,7 +45,7 @@ export const resolveLogEndpointDetailsFromManifest = async (
         })
         .promise();
 
-      return [key, `${res.ApiEndpoint}/v1`];
+      return [lambda.lambdaCdkPath, `${res.ApiEndpoint}/v1`];
     }),
   ).then(Object.fromEntries);
 };

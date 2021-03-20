@@ -1,7 +1,7 @@
 import {filterManifestByPath} from '../lib/filterManifestByPath';
 import {initAwsSdk} from '../lib/initAwsSdk';
 import {readManifest} from '../lib/readManifest';
-import {resolveLambdaDetailsFromManifest} from '../lib/resolveLambdaDetailsFromManifest';
+import {resolveLambdaNamesFromManifest} from '../lib/resolveLambdaNamesFromManifest';
 import {runSynth} from '../lib/runSynth';
 import {updateLambdaFunctionCode} from '../lib/updateLambdaFunctionCode';
 import {createCLILoggerForLambda} from '../lib/createCLILoggerForLambda';
@@ -29,7 +29,7 @@ export const once = async (
 
   const lambdaProgressText = 'resolving lambda configuration';
   twisters.put('lambda', {text: lambdaProgressText});
-  resolveLambdaDetailsFromManifest(filteredManifest)
+  resolveLambdaNamesFromManifest(filteredManifest)
     .then((result) => {
       twisters.put('lambda', {
         text: lambdaProgressText,
@@ -39,21 +39,26 @@ export const once = async (
     })
     .then((lambdaDetails) =>
       Promise.all(
-        lambdaDetails.map(async ({detail, lambdaCdkPath, lambdaManifest}) => {
-          const {prefix} = createCLILoggerForLambda(lambdaCdkPath);
-          const lambdaUploadText = 'uploading lambda function code';
-          twisters.put(lambdaCdkPath, {meta: {prefix}, text: lambdaUploadText});
-          return updateLambdaFunctionCode(
-            lambdaManifest.assetPath,
-            detail,
-          ).then(() =>
+        lambdaDetails.map(
+          async ({functionName, lambdaCdkPath, lambdaManifest}) => {
+            const {prefix} = createCLILoggerForLambda(lambdaCdkPath);
+            const lambdaUploadText = 'uploading lambda function code';
             twisters.put(lambdaCdkPath, {
               meta: {prefix},
-              active: false,
               text: lambdaUploadText,
-            }),
-          );
-        }),
+            });
+            return updateLambdaFunctionCode(
+              lambdaManifest.assetPath,
+              functionName,
+            ).then(() =>
+              twisters.put(lambdaCdkPath, {
+                meta: {prefix},
+                active: false,
+                text: lambdaUploadText,
+              }),
+            );
+          },
+        ),
       ),
     )
     .catch((e) => {

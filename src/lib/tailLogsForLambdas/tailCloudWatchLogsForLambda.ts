@@ -1,4 +1,4 @@
-import {AWSError, CloudFormation, CloudWatchLogs} from 'aws-sdk';
+import {AWSError, CloudWatchLogs} from 'aws-sdk';
 import EventEmitter from 'events';
 import {parseCloudWatchLog} from './parseCloudwatchLog';
 
@@ -11,9 +11,9 @@ interface LogEventEmitter extends EventEmitter {
 }
 
 export const tailCloudWatchLogsForLambda = (
-  lambdaDetail: CloudFormation.StackResourceDetail,
+  lambdaName: string,
 ): LogEventEmitter => {
-  const logGroupName = `/aws/lambda/${lambdaDetail.PhysicalResourceId}`;
+  const logGroupName = `/aws/lambda/${lambdaName}`;
   const cloudWatchLogs = new CloudWatchLogs();
   let startTime = Date.now();
   const emitter = new EventEmitter();

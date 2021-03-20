@@ -18,6 +18,10 @@ const logsOption = new Option(
   '--no-logs',
   "don't subscribe to CloudWatch logs for each of your lambdas",
 );
+const forceCloudwatchLogsOption = new Option(
+  '--force-cloudwatch',
+  'force polling cloudwatch streams rather than using real-time logs',
+);
 const cdkContextOption = new Option(
   '-c, --context <key=value...>',
   'pass context to the cdk synth command',
@@ -44,6 +48,7 @@ program
   .addOption(profileOption)
   .addOption(cdkAppOption)
   .addOption(logsOption)
+  .addOption(forceCloudwatchLogsOption)
   .action(watch);
 
 program
@@ -54,6 +59,7 @@ program
   )
   .addOption(cdkContextOption)
   .addOption(profileOption)
+  .addOption(forceCloudwatchLogsOption)
   .action(logs);
 
 program

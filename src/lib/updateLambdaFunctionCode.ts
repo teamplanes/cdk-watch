@@ -4,13 +4,13 @@ import {zipDirectory} from './zipDirectory';
 
 export const updateLambdaFunctionCode = async (
   watchOutdir: string,
-  detail: CloudFormation.StackResourceDetail,
+  functionName: string,
 ): Promise<PromiseResult<Lambda.FunctionConfiguration, AWSError>> => {
   const lambda = new Lambda({maxRetries: 10});
   return zipDirectory(watchOutdir).then((zip) => {
     return lambda
       .updateFunctionCode({
-        FunctionName: detail.PhysicalResourceId as string,
+        FunctionName: functionName as string,
         ZipFile: zip,
       })
       .promise();

@@ -8,7 +8,7 @@ export type LogLevel =
   | 'trace'
   | 'fatal';
 
-export type Log = {level: LogLevel; log: any[]; lambda: string};
+export type Log = {level: LogLevel; log: any[]; date: number; lambda: string};
 
 export const patchConsole = (logs: Log[]): void => {
   const {log, debug, info, warn, error, trace, fatal} = console as Console & {
@@ -19,6 +19,7 @@ export const patchConsole = (logs: Log[]): void => {
     logs.push({
       lambda: process.env.AWS_LAMBDA_FUNCTION_NAME as string,
       level: 'info',
+      date: Date.now(),
       log: params,
     });
     log.apply(console, params);
@@ -27,6 +28,7 @@ export const patchConsole = (logs: Log[]): void => {
     logs.push({
       lambda: process.env.AWS_LAMBDA_FUNCTION_NAME as string,
       level: 'debug',
+      date: Date.now(),
       log: params,
     });
     debug.apply(console, params);
@@ -35,6 +37,7 @@ export const patchConsole = (logs: Log[]): void => {
     logs.push({
       lambda: process.env.AWS_LAMBDA_FUNCTION_NAME as string,
       level: 'info',
+      date: Date.now(),
       log: params,
     });
     info.apply(console, params);
@@ -43,6 +46,7 @@ export const patchConsole = (logs: Log[]): void => {
     logs.push({
       lambda: process.env.AWS_LAMBDA_FUNCTION_NAME as string,
       level: 'warn',
+      date: Date.now(),
       log: params,
     });
     warn.apply(console, params);
@@ -51,6 +55,7 @@ export const patchConsole = (logs: Log[]): void => {
     logs.push({
       lambda: process.env.AWS_LAMBDA_FUNCTION_NAME as string,
       level: 'error',
+      date: Date.now(),
       log: params,
     });
     error.apply(console, params);
@@ -59,6 +64,7 @@ export const patchConsole = (logs: Log[]): void => {
     logs.push({
       lambda: process.env.AWS_LAMBDA_FUNCTION_NAME as string,
       level: 'trace',
+      date: Date.now(),
       log: params,
     });
     trace.apply(console, params);
@@ -67,6 +73,7 @@ export const patchConsole = (logs: Log[]): void => {
     logs.push({
       lambda: process.env.AWS_LAMBDA_FUNCTION_NAME as string,
       level: 'fatal',
+      date: Date.now(),
       log: params,
     });
     fatal.apply(console, params);

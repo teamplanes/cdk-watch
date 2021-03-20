@@ -10,9 +10,17 @@ export interface LambdaManifestType {
   realTimeLogsStackLogicalId: string | undefined;
 }
 
+export interface LambdaMap {
+  [lambdaCdkPath: string]: LambdaManifestType;
+}
+
 export interface CdkWatchManifest {
   region: string;
-  lambdas: {
-    [lambdaCdkPath: string]: LambdaManifestType;
-  };
+  lambdas: LambdaMap;
+}
+
+export interface LambdaDetail {
+  functionName: string;
+  lambdaCdkPath: string;
+  lambdaManifest: LambdaManifestType;
 }

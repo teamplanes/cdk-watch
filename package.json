@@ -38,6 +38,7 @@
     "fs-extra": "^9.1.0",
     "json5": "^2.2.0",
     "minimatch": "^3.0.4",
+    "reconnecting-websocket": "^4.4.0",
     "stream-buffers": "^3.0.2",
     "twisters": "^1.1.0",
     "ws": "^7.4.4"

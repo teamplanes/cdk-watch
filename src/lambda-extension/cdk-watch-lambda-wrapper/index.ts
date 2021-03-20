@@ -88,7 +88,7 @@ try {
       await sendLogs();
       return result;
     } catch (e) {
-      console.log('Main handler threw error', e);
+      console.error('Main handler threw error', e);
       clearInterval(interval);
       await sendLogs();
       throw e;

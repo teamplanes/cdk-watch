@@ -1,11 +1,11 @@
 import {CloudFormation} from 'aws-sdk';
-import {LambdaManifestType, CdkWatchManifest} from '../types.d';
+import {LambdaManifestType, CdkWatchManifest, LambdaDetail} from '../types.d';
 import {resolveStackNameForLambda} from './resolveStackNameForLambda';
 
-const resolveLambdaDetailFromManifest = async (
+const resolveLambdaNameFromManifest = async (
   lambdaManifest: LambdaManifestType,
 ): Promise<{
-  detail: CloudFormation.StackResourceDetail;
+  functionName: string;
   lambdaManifest: LambdaManifestType;
 }> => {
   const cfn = new CloudFormation({maxRetries: 10});
@@ -17,24 +17,25 @@ const resolveLambdaDetailFromManifest = async (
       LogicalResourceId: lambdaManifest.lambdaLogicalId,
     })
     .promise()
-    .then(({StackResourceDetail}) => ({
-      detail: StackResourceDetail as CloudFormation.StackResourceDetail,
-      lambdaManifest,
-    }));
+    .then(({StackResourceDetail}) => {
+      if (!StackResourceDetail?.PhysicalResourceId) {
+        throw new Error(
+          `Could not find name for lambda with Logical ID ${lambdaManifest.lambdaLogicalId}`,
+        );
+      }
+      return {
+        functionName: StackResourceDetail?.PhysicalResourceId as string,
+        lambdaManifest,
+      };
+    });
 };
 
-export const resolveLambdaDetailsFromManifest = (
+export const resolveLambdaNamesFromManifest = (
   manifest: CdkWatchManifest,
-): Promise<
-  {
-    detail: CloudFormation.StackResourceDetail;
-    lambdaCdkPath: string;
-    lambdaManifest: LambdaManifestType;
-  }[]
-> =>
+): Promise<LambdaDetail[]> =>
   Promise.all(
     Object.keys(manifest.lambdas).map(async (lambdaCdkPath) => {
-      const details = await resolveLambdaDetailFromManifest(
+      const details = await resolveLambdaNameFromManifest(
         manifest.lambdas[lambdaCdkPath],
       );
       return {lambdaCdkPath, ...details};
