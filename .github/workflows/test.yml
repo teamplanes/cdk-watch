@@ -35,3 +35,6 @@ jobs:
 
       - name: yarn type-check
         run: yarn type-check
+
+      - name: yarn test
+        run: yarn test
