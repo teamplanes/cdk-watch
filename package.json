@@ -8,7 +8,7 @@
   "bin": {
     "cdkw": "lib/cli.js"
   },
-  "version": "0.0.19-next.1",
+  "version": "0.0.19-next.2",
   "scripts": {
     "type-check": "tsc -p tsconfig.json --noEmit",
     "build": "rm -rf lib && tsc -p tsconfig.json && chmod +x ./lib/lambda-extension/cdk-watch-lambda-wrapper/index.js",
