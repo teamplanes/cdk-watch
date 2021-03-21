@@ -1,4 +1,4 @@
 export {
   WatchableNodejsFunction,
   WatchableNodejsFunctionProps,
-} from './WatchableNodejsFunction';
+} from './constructs/WatchableNodejsFunction';

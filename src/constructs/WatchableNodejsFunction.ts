@@ -1,3 +1,4 @@
+/* eslint-disable no-new */
 /* eslint-disable import/no-extraneous-dependencies */
 import {NodejsFunction, NodejsFunctionProps} from '@aws-cdk/aws-lambda-nodejs';
 import {Runtime} from '@aws-cdk/aws-lambda';
@@ -6,10 +7,25 @@ import * as path from 'path';
 import findUp from 'find-up';
 import * as cdk from '@aws-cdk/core';
 import {BuildOptions, Loader} from 'esbuild';
-import {readManifest} from './utils/readManifest';
-import {writeManifest} from './utils/writeManifest';
+import {CfnElement} from '@aws-cdk/core';
+import {readManifest} from '../lib/readManifest';
+import {writeManifest} from '../lib/writeManifest';
+import {RealTimeLambdaLogsAPI} from './RealTimeLambdaLogsAPI';
+import {CDK_WATCH_CONTEXT_LOGS_ENABLED} from '../consts';
 
-type WatchableNodejsFunctionProps = NodejsFunctionProps;
+interface WatchableNodejsFunctionProps extends NodejsFunctionProps {
+  /**
+   * CDK Watch Options
+   */
+  watchOptions?: {
+    /**
+     * Default: `false`
+     * Set to true to enable this construct to create all the
+     * required infrastructure for realtime logging
+     */
+    realTimeLoggingEnabled?: boolean;
+  };
+}
 
 /**
  * `extends` NodejsFunction and behaves the same, however `entry` is a required
@@ -18,6 +34,8 @@ type WatchableNodejsFunctionProps = NodejsFunctionProps;
  */
 class WatchableNodejsFunction extends NodejsFunction {
   public esbuildOptions: BuildOptions;
+
+  public cdkWatchLogsApi?: RealTimeLambdaLogsAPI;
 
   constructor(
     scope: cdk.Construct,
@@ -51,6 +69,50 @@ class WatchableNodejsFunction extends NodejsFunction {
       banner: props.bundling?.banner,
       footer: props.bundling?.footer,
     };
+
+    if (
+      scope.node.tryGetContext(CDK_WATCH_CONTEXT_LOGS_ENABLED) ||
+      props.watchOptions?.realTimeLoggingEnabled
+    ) {
+      const [rootStack] = this.parentStacks;
+      const logsApiId = 'CDKWatchWebsocketLogsApi';
+      this.cdkWatchLogsApi =
+        (rootStack.node.tryFindChild(logsApiId) as
+          | undefined
+          | RealTimeLambdaLogsAPI) ||
+        new RealTimeLambdaLogsAPI(rootStack, logsApiId);
+
+      this.addEnvironment(
+        'AWS_LAMBDA_EXEC_WRAPPER',
+        '/opt/cdk-watch-lambda-wrapper/index.js',
+      );
+      this.addLayers(this.cdkWatchLogsApi.logsLayerVersion);
+      this.addToRolePolicy(this.cdkWatchLogsApi.executeApigwPolicy);
+      this.addToRolePolicy(this.cdkWatchLogsApi.lambdaDynamoConnectionPolicy);
+      this.addEnvironment(
+        'CDK_WATCH_CONNECTION_TABLE_NAME',
+        this.cdkWatchLogsApi.CDK_WATCH_CONNECTION_TABLE_NAME,
+      );
+      this.addEnvironment(
+        'CDK_WATCH_API_GATEWAY_MANAGEMENT_URL',
+        this.cdkWatchLogsApi.CDK_WATCH_API_GATEWAY_MANAGEMENT_URL,
+      );
+    }
+  }
+
+  /**
+   * Returns all the parents of this construct's  stack (i.e. if this construct
+   * is within a NestedStack etc etc).
+   */
+  private get parentStacks() {
+    const parents: cdk.Stack[] = [this.stack];
+    // Get all the nested stack parents into an array, the array will start with
+    // the root stack all the way to the stack holding the lambda as the last
+    // element in the array.
+    while (parents[0].nestedStackParent) {
+      parents.unshift(parents[0].nestedStackParent as cdk.Stack);
+    }
+    return parents;
   }
 
   /**
@@ -72,26 +134,27 @@ class WatchableNodejsFunction extends NodejsFunction {
     }
 
     const assetPath = path.join(session.outdir, asset.assetPath);
-    const parents: cdk.Stack[] = [this.stack];
-    // Get all the nested stack parents into an array, the array will start with
-    // the root stack all the way to the stack holding the lambda as the last
-    // element in the array.
-    while (parents[0].nestedStackParent) {
-      parents.unshift(parents[0].nestedStackParent as cdk.Stack);
-    }
-
-    const [rootStack, ...nestedStacks] = parents;
+    const [rootStack, ...nestedStacks] = this.parentStacks;
     const cdkWatchManifest = readManifest() || {
       region: this.stack.region,
       lambdas: {},
     };
     cdkWatchManifest.region = this.stack.region;
+
     cdkWatchManifest.lambdas =
       typeof cdkWatchManifest.lambdas === 'object'
         ? cdkWatchManifest.lambdas
         : {};
     cdkWatchManifest.lambdas[this.node.path] = {
       assetPath,
+      realTimeLogsStackLogicalId: this.cdkWatchLogsApi
+        ? this.stack.getLogicalId(
+            this.cdkWatchLogsApi.nestedStackResource as CfnElement,
+          )
+        : undefined,
+      realTimeLogsApiLogicalId: this.cdkWatchLogsApi?.websocketApi
+        ? this.stack.getLogicalId(this.cdkWatchLogsApi.websocketApi)
+        : undefined,
       esbuildOptions: this.esbuildOptions,
       lambdaLogicalId: this.stack.getLogicalId(
         this.node.defaultChild as cdk.CfnResource,

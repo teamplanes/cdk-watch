@@ -6,15 +6,15 @@ export const createCLILoggerForLambda = (
   lambdaCdkPath: string,
 ): {
   prefix: string;
-  log(message: string): void;
+  log(...message: any[]): void;
   error(message: string | Error): void;
 } => {
   const functionName = truncate(lambdaCdkPath, 20, {position: 'start'});
   const prefix = `[${chalk.grey(functionName)}]`;
   return {
     prefix,
-    log(message) {
-      console.log(prefix, message);
+    log(...message) {
+      console.log(prefix, ...message);
     },
     error(message) {
       console.error(

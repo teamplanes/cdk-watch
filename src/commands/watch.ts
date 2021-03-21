@@ -1,15 +1,15 @@
 import * as path from 'path';
 import * as esbuild from 'esbuild';
-import {copyCdkAssetToWatchOutdir} from '../utils/copyCdkAssetToWatchOutdir';
-import {filterManifestByPath} from '../utils/filterManifestByPath';
-import {initAwsSdk} from '../utils/initAwsSdk';
-import {readManifest} from '../utils/readManifest';
-import {resolveLambdaDetailsFromManifest} from '../utils/resolveLambdaDetailsFromManifest';
-import {runSynth} from '../utils/runSynth';
-import {tailLogsForLambda} from '../utils/tailLogsForLambda';
-import {updateLambdaFunctionCode} from '../utils/updateLambdaFunctionCode';
-import {createCLILoggerForLambda} from '../utils/createCLILoggerForLambda';
-import {twisters} from '../utils/twisters';
+import {copyCdkAssetToWatchOutdir} from '../lib/copyCdkAssetToWatchOutdir';
+import {filterManifestByPath} from '../lib/filterManifestByPath';
+import {initAwsSdk} from '../lib/initAwsSdk';
+import {readManifest} from '../lib/readManifest';
+import {resolveLambdaNamesFromManifest} from '../lib/resolveLambdaNamesFromManifest';
+import {runSynth} from '../lib/runSynth';
+import {updateLambdaFunctionCode} from '../lib/updateLambdaFunctionCode';
+import {createCLILoggerForLambda} from '../lib/createCLILoggerForLambda';
+import {twisters} from '../lib/twisters';
+import {tailLogsForLambdas} from '../lib/tailLogsForLambdas';
 
 export const watch = async (
   pathGlob: string,
@@ -18,6 +18,7 @@ export const watch = async (
     app: string;
     profile: string;
     logs: boolean;
+    forceCloudwatch?: boolean;
   },
 ): Promise<void> => {
   await runSynth({
@@ -33,10 +34,7 @@ export const watch = async (
 
   const lambdaProgressText = 'resolving lambda configuration';
   twisters.put('lambda', {text: lambdaProgressText});
-  Promise.all([
-    resolveLambdaDetailsFromManifest(filteredManifest),
-    esbuild.startService(),
-  ] as const)
+  resolveLambdaNamesFromManifest(filteredManifest)
     .then((result) => {
       twisters.put('lambda', {
         text: lambdaProgressText,
@@ -44,71 +42,67 @@ export const watch = async (
       });
       return result;
     })
-    .then(([lambdaDetails, esbuildService]) =>
-      Promise.all(
-        lambdaDetails.map(async ({detail, lambdaCdkPath, lambdaManifest}) => {
-          const logger = createCLILoggerForLambda(lambdaCdkPath);
-          const watchOutdir = copyCdkAssetToWatchOutdir(lambdaManifest);
-          if (options.logs) {
-            tailLogsForLambda(detail)
-              .on('log', (log) => {
-                logger.log(log.toString());
-              })
-              .on('error', (error) => {
-                logger.error(error.toString());
-              });
-          }
+    .then(async (lambdaDetails) => {
+      if (options.logs) {
+        await tailLogsForLambdas(lambdaDetails, options.forceCloudwatch);
+      }
+      return Promise.all(
+        lambdaDetails.map(
+          async ({functionName, lambdaCdkPath, lambdaManifest}) => {
+            const logger = createCLILoggerForLambda(lambdaCdkPath);
+            const watchOutdir = copyCdkAssetToWatchOutdir(lambdaManifest);
 
-          logger.log('watching');
-          esbuildService
-            .build({
-              ...lambdaManifest.esbuildOptions,
-              outfile: path.join(watchOutdir, 'index.js'),
-              // Unless explicitly told not to, turn on treeShaking and minify to
-              // improve upload times
-              treeShaking: lambdaManifest.esbuildOptions.treeShaking ?? true,
-              minify: lambdaManifest.esbuildOptions.minify ?? true,
-              // Keep the console clean from build warnings, only print errors
-              logLevel: lambdaManifest.esbuildOptions.logLevel ?? 'error',
-              watch: {
-                onRebuild: (error) => {
-                  if (error) {
-                    logger.error(
-                      `failed to rebuild lambda function code ${error.toString()}`,
-                    );
-                    return;
-                  }
+            logger.log('watching');
+            esbuild
+              .build({
+                ...lambdaManifest.esbuildOptions,
+                outfile: path.join(watchOutdir, 'index.js'),
+                // Unless explicitly told not to, turn on treeShaking and minify to
+                // improve upload times
+                treeShaking: lambdaManifest.esbuildOptions.treeShaking ?? true,
+                minify: lambdaManifest.esbuildOptions.minify ?? true,
+                // Keep the console clean from build warnings, only print errors
+                logLevel: lambdaManifest.esbuildOptions.logLevel ?? 'error',
+                watch: {
+                  onRebuild: (error) => {
+                    if (error) {
+                      logger.error(
+                        `failed to rebuild lambda function code ${error.toString()}`,
+                      );
+                      return;
+                    }
 
-                  const uploadingProgressText = 'uploading function code';
-                  twisters.put(`${lambdaCdkPath}:uploading`, {
-                    meta: {prefix: logger.prefix},
-                    text: uploadingProgressText,
-                  });
-
-                  updateLambdaFunctionCode(watchOutdir, detail)
-                    .then(() => {
-                      twisters.put(`${lambdaCdkPath}:uploading`, {
-                        meta: {prefix: logger.prefix},
-                        text: uploadingProgressText,
-                        active: false,
-                      });
-                    })
-                    .catch((e) => {
-                      twisters.put(`${lambdaCdkPath}:uploading`, {
-                        text: uploadingProgressText,
-                        meta: {error: e},
-                        active: false,
-                      });
+                    const uploadingProgressText = 'uploading function code';
+                    twisters.put(`${lambdaCdkPath}:uploading`, {
+                      meta: {prefix: logger.prefix},
+                      text: uploadingProgressText,
                     });
+
+                    updateLambdaFunctionCode(watchOutdir, functionName)
+                      .then(() => {
+                        twisters.put(`${lambdaCdkPath}:uploading`, {
+                          meta: {prefix: logger.prefix},
+                          text: uploadingProgressText,
+                          active: false,
+                        });
+                      })
+                      .catch((e) => {
+                        twisters.put(`${lambdaCdkPath}:uploading`, {
+                          text: uploadingProgressText,
+                          meta: {error: e},
+                          active: false,
+                        });
+                      });
+                  },
                 },
-              },
-            })
-            .catch((e: Error) => {
-              logger.error(`error building lambda: ${e.toString()}`);
-            });
-        }),
-      ),
-    )
+              })
+              .catch((e: Error) => {
+                logger.error(`error building lambda: ${e.toString()}`);
+              });
+          },
+        ),
+      );
+    })
     .catch((e) => {
       // eslint-disable-next-line no-console
       console.error(e);

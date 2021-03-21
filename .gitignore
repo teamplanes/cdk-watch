@@ -2,3 +2,5 @@ node_modules
 *.log
 package-lock.json
 lib
+!src/lib
+cdk-watch-logs-extension/**/*.js
