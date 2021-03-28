@@ -17,7 +17,7 @@ describe('CLI commands', () => {
   });
 
   test('program runs watch as the default command', async () => {
-    const program = new CdkWatchCommand();
+    const program = new CdkWatchCommand('1');
     await program.parseAsync(buildArgv('**'));
     expect(watch).toBeCalledWith('**', {logs: true}, expect.anything());
     expect(list).toBeCalledTimes(0);
@@ -26,7 +26,7 @@ describe('CLI commands', () => {
   });
 
   test('program runs watch when command name is provided', async () => {
-    const program = new CdkWatchCommand();
+    const program = new CdkWatchCommand('1');
     await program.parseAsync(buildArgv('watch My/Path'));
     expect(watch).toBeCalledWith('My/Path', {logs: true}, expect.anything());
     expect(list).toBeCalledTimes(0);
@@ -43,7 +43,7 @@ describe('CLI commands', () => {
   `(
     'command runs correct function',
     async ({command}: {command: keyof typeof otherCommands}) => {
-      const program = new CdkWatchCommand();
+      const program = new CdkWatchCommand('1');
       await program.parseAsync(buildArgv(`${command} My/Path`));
       expect(otherCommands[command]).toBeCalledWith(
         'My/Path',
@@ -60,7 +60,7 @@ describe('CLI commands', () => {
   `(
     'logs are on by default but can be turned off',
     async ({flag, expected}) => {
-      const program = new CdkWatchCommand();
+      const program = new CdkWatchCommand('1');
       await program.parseAsync(buildArgv(`watch My/Path ${flag}`));
       expect(watch).toBeCalledWith(
         'My/Path',

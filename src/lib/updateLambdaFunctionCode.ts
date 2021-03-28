@@ -1,4 +1,4 @@
-import {AWSError, CloudFormation, Lambda} from 'aws-sdk';
+import {AWSError, Lambda} from 'aws-sdk';
 import {PromiseResult} from 'aws-sdk/lib/request';
 import {zipDirectory} from './zipDirectory';
 
