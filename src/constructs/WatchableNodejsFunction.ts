@@ -1,9 +1,14 @@
 /* eslint-disable no-new */
 /* eslint-disable import/no-extraneous-dependencies */
-import {NodejsFunction, NodejsFunctionProps} from '@aws-cdk/aws-lambda-nodejs';
+import {
+  BundlingOptions,
+  NodejsFunction,
+  NodejsFunctionProps,
+} from '@aws-cdk/aws-lambda-nodejs';
 import {Runtime} from '@aws-cdk/aws-lambda';
 import {Asset} from '@aws-cdk/aws-s3-assets';
 import * as path from 'path';
+import * as fs from 'fs-extra';
 import findUp from 'find-up';
 import * as cdk from '@aws-cdk/core';
 import {BuildOptions, Loader} from 'esbuild';
@@ -12,8 +17,26 @@ import {readManifest} from '../lib/readManifest';
 import {writeManifest} from '../lib/writeManifest';
 import {RealTimeLambdaLogsAPI} from './RealTimeLambdaLogsAPI';
 import {CDK_WATCH_CONTEXT_LOGS_ENABLED} from '../consts';
+import {NodeModulesLayer} from './NodeModulesLayer';
 
+interface WatchableBundlingOptions extends BundlingOptions {
+  /**
+   * Similar to `bundling.nodeModules` however in this case your modules will be
+   * bundled into a Lambda layer instead of being uploaded with your lambda
+   * function code. This has upside when 'watching' your code as the only code
+   * that needs to be uploaded each time is your core lambda code rather than
+   * any modules, which are unlikely to change frequently. Passing `true` will
+   * load all modules found in the "dependencies" of the entries package.json
+   */
+  nodeModulesLayer?: boolean | string[];
+}
+
+// NodeModulesLayer
 interface WatchableNodejsFunctionProps extends NodejsFunctionProps {
+  /**
+   * Bundling options.
+   */
+  bundling?: WatchableBundlingOptions;
   /**
    * CDK Watch Options
    */
@@ -37,37 +60,90 @@ class WatchableNodejsFunction extends NodejsFunction {
 
   public cdkWatchLogsApi?: RealTimeLambdaLogsAPI;
 
+  public readonly local?: cdk.ILocalBundling;
+
   constructor(
     scope: cdk.Construct,
     id: string,
     props: WatchableNodejsFunctionProps,
   ) {
-    super(scope, id, props);
+    if (!props.entry) throw new Error('Expected props.entry');
+    const pkgPath = findUp.sync('package.json', {
+      cwd: path.dirname(props.entry),
+    });
+    if (!pkgPath) {
+      throw new Error(
+        'Cannot find a `package.json` in this project. Using `nodeModules` requires a `package.json`.',
+      );
+    }
+    const nodeModulesLayerOption = props.bundling?.nodeModulesLayer;
+    const shouldCreateModulesLayer =
+      typeof nodeModulesLayerOption === 'boolean'
+        ? nodeModulesLayerOption
+        : (nodeModulesLayerOption?.length ?? 0) > 0;
+
+    let nodeModulesLayer: null | NodeModulesLayer = null;
+    let moduleNames: string[] = [];
+    if (shouldCreateModulesLayer && nodeModulesLayerOption) {
+      if (typeof nodeModulesLayerOption === 'boolean') {
+        const packageJson = fs.readJSONSync(pkgPath);
+        moduleNames = Object.keys(packageJson.dependencies || {});
+      } else {
+        moduleNames = nodeModulesLayerOption;
+      }
+      nodeModulesLayer = new NodeModulesLayer(scope, 'NodeModulesLayer', {
+        pkgPath,
+        nodeModules: moduleNames,
+        depsLockFilePath: props.depsLockFilePath,
+      });
+    }
+    const bundling: WatchableBundlingOptions = {
+      ...props.bundling,
+      externalModules: [
+        ...moduleNames,
+        ...(props.bundling?.externalModules || ['aws-sdk']),
+      ],
+    };
+    super(scope, id, {
+      ...props,
+      bundling,
+    });
+
+    if (nodeModulesLayer) {
+      this.addLayers(nodeModulesLayer);
+    }
+
     const {entry} = props;
     if (!entry) throw new Error('`entry` must be provided');
-    const target = props.runtime?.runtimeEquals(Runtime.NODEJS_10_X)
-      ? 'node10'
-      : 'node12';
+    const targetMatch = (props.runtime || Runtime.NODEJS_12_X).name.match(
+      /nodejs(\d+)/,
+    );
+    if (!targetMatch) {
+      throw new Error('Cannot extract version from runtime.');
+    }
+    const target = `node${targetMatch[1]}`;
+
     this.esbuildOptions = {
       target,
       bundle: true,
       entryPoints: [entry],
       platform: 'node',
-      minify: props.bundling?.minify ?? false,
-      sourcemap: props.bundling?.sourceMap,
+      minify: bundling?.minify ?? false,
+      sourcemap: bundling?.sourceMap,
       external: [
-        ...(props.bundling?.externalModules ?? ['aws-sdk']),
-        ...(props.bundling?.nodeModules ?? []),
+        ...(bundling?.externalModules ?? ['aws-sdk']),
+        ...(bundling?.nodeModules ?? []),
+        ...(moduleNames ?? []),
       ],
-      loader: props.bundling?.loader as {[ext: string]: Loader} | undefined,
-      define: props.bundling?.define,
-      logLevel: props.bundling?.logLevel,
-      keepNames: props.bundling?.keepNames,
-      tsconfig: props.bundling?.tsconfig
-        ? path.resolve(entry, path.resolve(props.bundling?.tsconfig))
+      loader: bundling?.loader as {[ext: string]: Loader} | undefined,
+      define: bundling?.define,
+      logLevel: bundling?.logLevel,
+      keepNames: bundling?.keepNames,
+      tsconfig: bundling?.tsconfig
+        ? path.resolve(entry, path.resolve(bundling?.tsconfig))
         : findUp.sync('tsconfig.json', {cwd: path.dirname(entry)}),
-      banner: props.bundling?.banner,
-      footer: props.bundling?.footer,
+      banner: bundling?.banner,
+      footer: bundling?.footer,
     };
 
     if (

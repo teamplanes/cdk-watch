@@ -8,7 +8,8 @@ export class LogsLayerVersion extends LayerVersion {
       removalPolicy: RemovalPolicy.DESTROY,
       description:
         'Catches Lambda Logs and sends them to API Gateway Connections',
-      code: Code.fromAsset(path.join(__dirname, '../', 'lambda-extension')),
+      // NOTE: This file will be bundled into /lib/index.js, so this path must be relative to that
+      code: Code.fromAsset(path.join(__dirname, 'lambda-extension')),
     });
   }
 }

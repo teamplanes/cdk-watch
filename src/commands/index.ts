@@ -1,17 +1,13 @@
 import {Command, Option} from 'commander';
-import * as fs from 'fs-extra';
-import * as path from 'path';
 import {list} from './list';
 import {logs} from './logs';
 import {once} from './once';
 import {watch} from './watch';
 
 class CdkWatchCommand extends Command {
-  constructor() {
+  constructor(version: string) {
     super();
-    const {version} = fs.readJSONSync(
-      path.resolve(__dirname, '../../package.json'),
-    );
+
     this.version(version);
 
     const profileOption = new Option(

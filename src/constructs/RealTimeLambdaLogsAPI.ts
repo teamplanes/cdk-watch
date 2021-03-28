@@ -36,11 +36,8 @@ export class RealTimeLambdaLogsAPI extends cdk.NestedStack {
 
     const stack = Stack.of(this);
     const routeSelectionKey = 'action';
-    const websocketHandlerCodePath = path.join(
-      __dirname,
-      '..',
-      'websocketHandlers',
-    );
+    // NOTE: This file will be bundled into /lib/index.js, so this path must be relative to that
+    const websocketHandlerCodePath = path.join(__dirname, 'websocketHandlers');
 
     this.logsLayerVersion = new LogsLayerVersion(this, 'LogsLayerVersion');
 
