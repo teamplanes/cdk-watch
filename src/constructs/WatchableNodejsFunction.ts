@@ -13,11 +13,22 @@ import findUp from 'find-up';
 import * as cdk from '@aws-cdk/core';
 import {BuildOptions, Loader} from 'esbuild';
 import {CfnElement} from '@aws-cdk/core';
+import minimatch from 'minimatch';
 import {readManifest} from '../lib/readManifest';
 import {writeManifest} from '../lib/writeManifest';
 import {RealTimeLambdaLogsAPI} from './RealTimeLambdaLogsAPI';
 import {CDK_WATCH_CONTEXT_LOGS_ENABLED} from '../consts';
 import {NodeModulesLayer} from './NodeModulesLayer';
+
+type NodeModulesSelectOption =
+  | {
+      // whitelist the modules you'd like to install in the layer
+      include: string[];
+    }
+  | {
+      // include all but blacklist those you'd like to not include in the layer
+      exclude: string[];
+    };
 
 interface WatchableBundlingOptions extends BundlingOptions {
   /**
@@ -25,10 +36,11 @@ interface WatchableBundlingOptions extends BundlingOptions {
    * bundled into a Lambda layer instead of being uploaded with your lambda
    * function code. This has upside when 'watching' your code as the only code
    * that needs to be uploaded each time is your core lambda code rather than
-   * any modules, which are unlikely to change frequently. Passing `true` will
-   * load all modules found in the "dependencies" of the entries package.json
+   * any modules, which are unlikely to change frequently. You can either select
+   * the modules you  want t =o include in the layer, or include all and select
+   * the module's you'd like to exclude. Globs are accepted here.
    */
-  nodeModulesLayer?: boolean | string[];
+  nodeModulesLayer?: NodeModulesSelectOption;
 }
 
 // NodeModulesLayer
@@ -49,6 +61,20 @@ interface WatchableNodejsFunctionProps extends NodejsFunctionProps {
     realTimeLoggingEnabled?: boolean;
   };
 }
+
+const getNodeModuleLayerDependencies = (
+  pkgJsonPath: string,
+  selectOption: NodeModulesSelectOption,
+) => {
+  if ('include' in selectOption) {
+    return selectOption.include;
+  }
+
+  const packageJson = fs.readJSONSync(pkgJsonPath);
+  return Object.keys(packageJson.dependencies || {}).filter(
+    (key) => !selectOption.exclude.some((pattern) => minimatch(key, pattern)),
+  );
+};
 
 /**
  * `extends` NodejsFunction and behaves the same, however `entry` is a required
@@ -76,31 +102,19 @@ class WatchableNodejsFunction extends NodejsFunction {
         'Cannot find a `package.json` in this project. Using `nodeModules` requires a `package.json`.',
       );
     }
-    const nodeModulesLayerOption = props.bundling?.nodeModulesLayer;
-    const shouldCreateModulesLayer =
-      typeof nodeModulesLayerOption === 'boolean'
-        ? nodeModulesLayerOption
-        : (nodeModulesLayerOption?.length ?? 0) > 0;
+    const nodeModulesLayerSelectOption = props.bundling?.nodeModulesLayer;
 
-    let nodeModulesLayer: null | NodeModulesLayer = null;
-    let moduleNames: string[] = [];
-    if (shouldCreateModulesLayer && nodeModulesLayerOption) {
-      if (typeof nodeModulesLayerOption === 'boolean') {
-        const packageJson = fs.readJSONSync(pkgPath);
-        moduleNames = Object.keys(packageJson.dependencies || {});
-      } else {
-        moduleNames = nodeModulesLayerOption;
-      }
-      nodeModulesLayer = new NodeModulesLayer(scope, 'NodeModulesLayer', {
+    let moduleNames: string[] | null = null;
+    if (nodeModulesLayerSelectOption) {
+      moduleNames = getNodeModuleLayerDependencies(
         pkgPath,
-        nodeModules: moduleNames,
-        depsLockFilePath: props.depsLockFilePath,
-      });
+        nodeModulesLayerSelectOption,
+      );
     }
     const bundling: WatchableBundlingOptions = {
       ...props.bundling,
       externalModules: [
-        ...moduleNames,
+        ...(moduleNames || []),
         ...(props.bundling?.externalModules || ['aws-sdk']),
       ],
     };
@@ -109,8 +123,14 @@ class WatchableNodejsFunction extends NodejsFunction {
       bundling,
     });
 
-    if (nodeModulesLayer) {
-      this.addLayers(nodeModulesLayer);
+    if (moduleNames) {
+      this.addLayers(
+        new NodeModulesLayer(this, 'NodeModulesLayer', {
+          nodeModules: moduleNames,
+          pkgPath,
+          depsLockFilePath: props.depsLockFilePath,
+        }),
+      );
     }
 
     const {entry} = props;
