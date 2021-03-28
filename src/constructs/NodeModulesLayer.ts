@@ -1,4 +1,4 @@
-import {Code, LayerVersion, LayerVersionProps} from '@aws-cdk/aws-lambda';
+import {Code, LayerVersion} from '@aws-cdk/aws-lambda';
 import {
   extractDependencies,
   findUp,
