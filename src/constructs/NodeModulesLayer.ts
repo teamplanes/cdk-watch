@@ -8,10 +8,7 @@ import {Construct, RemovalPolicy} from '@aws-cdk/core';
 import execa from 'execa';
 import * as fs from 'fs-extra';
 import * as path from 'path';
-import {
-  CDK_WATCH_CONTEXT_NODE_MODULES_ENABLED,
-  CDK_WATCH_OUTDIR,
-} from '../consts';
+import {CDK_WATCH_OUTDIR} from '../consts';
 
 interface NodeModulesLayerProps {
   depsLockFilePath?: string;
@@ -79,27 +76,19 @@ export class NodeModulesLayer extends LayerVersion {
     fs.copyFileSync(depsLockFilePath, path.join(outputDir, lockFile));
     fs.writeJsonSync(path.join(outputDir, 'package.json'), {dependencies});
 
-    let code: Code = Code.fromInline('dummy');
-
-    if (
-      scope.node.tryGetContext(CDK_WATCH_CONTEXT_NODE_MODULES_ENABLED) !== '1'
-    ) {
-      // eslint-disable-next-line no-console
-      console.log('Installing node_modules in layer');
-      execa.sync(installer, ['install'], {
-        cwd: outputDir,
-        stderr: 'inherit',
-        stdout: 'ignore',
-        stdin: 'ignore',
-      });
-
-      code = Code.fromAsset(layerBase);
-    }
+    // eslint-disable-next-line no-console
+    console.log('Installing node_modules in layer');
+    execa.sync(installer, ['install'], {
+      cwd: outputDir,
+      stderr: 'inherit',
+      stdout: 'ignore',
+      stdin: 'ignore',
+    });
 
     super(scope, id, {
       removalPolicy: RemovalPolicy.DESTROY,
       description: 'NodeJS Modules Packaged into a Layer by cdk-watch',
-      code,
+      code: Code.fromAsset(layerBase),
     });
   }
 }

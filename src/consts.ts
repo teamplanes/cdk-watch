@@ -5,8 +5,7 @@ export const CDK_WATCH_OUTDIR = 'cdk-watch';
 // to tru rather than false.
 export const CDK_WATCH_CONTEXT_LOGS_ENABLED =
   'cdk-watch:forceRealTimeLoggingEnabled';
-// A flag to tell cdk-watch to install node-modules for the layer when running
-// the project in watch mode. I can't think of a use-case of why you'd want to
-// enable this.
-export const CDK_WATCH_CONTEXT_NODE_MODULES_ENABLED =
-  'cdk-watch:nodeModulesInstallEnabled';
+// A flag to tell cdk to not install node-modules for the layer when
+// running synth. This is on by default when running any cdk-commands
+export const CDK_WATCH_CONTEXT_NODE_MODULES_DISABLED =
+  'cdk-watch:nodeModulesInstallDisabled';

@@ -17,7 +17,10 @@ import minimatch from 'minimatch';
 import {readManifest} from '../lib/readManifest';
 import {writeManifest} from '../lib/writeManifest';
 import {RealTimeLambdaLogsAPI} from './RealTimeLambdaLogsAPI';
-import {CDK_WATCH_CONTEXT_LOGS_ENABLED} from '../consts';
+import {
+  CDK_WATCH_CONTEXT_LOGS_ENABLED,
+  CDK_WATCH_CONTEXT_NODE_MODULES_DISABLED,
+} from '../consts';
 import {NodeModulesLayer} from './NodeModulesLayer';
 
 type NodeModulesSelectOption =
@@ -122,8 +125,9 @@ class WatchableNodejsFunction extends NodejsFunction {
       ...props,
       bundling,
     });
-
-    if (moduleNames) {
+    const shouldSkipInstall =
+      scope.node.tryGetContext(CDK_WATCH_CONTEXT_NODE_MODULES_DISABLED) === '1';
+    if (moduleNames && !shouldSkipInstall) {
       this.addLayers(
         new NodeModulesLayer(this, 'NodeModulesLayer', {
           nodeModules: moduleNames,
