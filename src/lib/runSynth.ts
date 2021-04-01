@@ -27,6 +27,21 @@ export const runSynth = async (options: {
     options.profile && `--profile=${options.profile}`,
     options.app && `--app=${options.app}`,
   ].filter(Boolean) as string[];
-  await execa('cdk', command, {preferLocal: true, stdio: 'inherit'});
+
+  const result = await execa('cdk', command, {
+    preferLocal: true,
+    cleanup: true,
+    reject: false,
+    all: true,
+  });
+
+  if (result.exitCode !== 0) {
+    console.log(result.all);
+    console.log(`\nSynth failed using the following command:`);
+    console.log(['cdk', ...command].join(' '));
+    console.log('');
+    process.exit(result.exitCode);
+  }
+
   twisters.put('synth', {active: false, text: synthProgressText});
 };

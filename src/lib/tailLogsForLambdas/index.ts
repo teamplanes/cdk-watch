@@ -45,7 +45,7 @@ const tailLogsForLambdas = async (
         }, {} as Record<string, LambdaDetail[]>);
 
   cloudwatchFunctions.forEach((name) => {
-    const logger = createCLILoggerForLambda(name);
+    const logger = createCLILoggerForLambda(name, lambdaFunctions.length > 1);
     tailCloudWatchLogsForLambda(name)
       .on('log', (log) => logger.log(log.toString()))
       .on('error', (log) => logger.error(log));
@@ -56,7 +56,10 @@ const tailLogsForLambdas = async (
     .reduce(
       (curr, detail) => ({
         ...curr,
-        [detail.functionName]: createCLILoggerForLambda(detail.lambdaCdkPath),
+        [detail.functionName]: createCLILoggerForLambda(
+          detail.lambdaCdkPath,
+          lambdaFunctions.length > 1,
+        ),
       }),
       {} as Record<string, ReturnType<typeof createCLILoggerForLambda>>,
     );

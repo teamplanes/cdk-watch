@@ -49,10 +49,13 @@ export const watch = async (
       return Promise.all(
         lambdaDetails.map(
           async ({functionName, lambdaCdkPath, lambdaManifest}) => {
-            const logger = createCLILoggerForLambda(lambdaCdkPath);
+            const logger = createCLILoggerForLambda(
+              lambdaCdkPath,
+              lambdaDetails.length > 1,
+            );
             const watchOutdir = copyCdkAssetToWatchOutdir(lambdaManifest);
 
-            logger.log('watching');
+            logger.log('waiting for changes');
             esbuild
               .build({
                 ...lambdaManifest.esbuildOptions,
