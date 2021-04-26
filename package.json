@@ -8,7 +8,7 @@
   "bin": {
     "cdkw": "lib/cli.js"
   },
-  "version": "0.0.22-next.1",
+  "version": "0.0.22-next.2",
   "scripts": {
     "type-check": "tsc -p tsconfig.json --noEmit",
     "build": "tsup src/index.ts src/cli.ts src/index.ts src/websocketHandlers/index.ts src/lambda-extension/cdk-watch-lambda-wrapper/index.ts --no-splitting -d lib --clean --dts=src/index.ts",
