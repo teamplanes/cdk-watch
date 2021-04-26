@@ -62,3 +62,12 @@ export const onDisconnect = async (
 
   return {statusCode: 200, body: 'Disconnected.'};
 };
+
+export const onMessage = async (
+  event: AWSLambda.APIGatewayProxyWithLambdaAuthorizerEvent<null>,
+): Promise<any> => {
+  if (event.body === 'ping') {
+    return {statusCode: 200, body: 'pong'};
+  }
+  return {statusCode: 422, body: 'wrong'};
+};
