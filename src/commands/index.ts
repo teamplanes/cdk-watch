@@ -30,6 +30,10 @@ class CdkWatchCommand extends Command {
       '-a, --app <app>',
       'pass the --app option to the underlying synth command',
     );
+    const skipInitialOption = new Option(
+      '--skip-initial',
+      'prevent cdk from uploading the function code until a file has changed',
+    ).default(false);
 
     this.command('watch', {isDefault: true})
       .arguments('<pathGlob>')
@@ -44,6 +48,7 @@ class CdkWatchCommand extends Command {
     $ cdkw "**" --profile=planes --no-logs\n`,
       )
       .addOption(cdkContextOption)
+      .addOption(skipInitialOption)
       .addOption(profileOption)
       .addOption(cdkAppOption)
       .addOption(logsOption)

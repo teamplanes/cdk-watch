@@ -18,6 +18,7 @@ export const watch = async (
     app: string;
     profile: string;
     logs: boolean;
+    skipInitial: boolean;
     forceCloudwatch?: boolean;
   },
 ): Promise<void> => {
@@ -55,6 +56,34 @@ export const watch = async (
             );
             const watchOutdir = copyCdkAssetToWatchOutdir(lambdaManifest);
 
+            const updateFunction = () => {
+              const uploadingProgressText = 'uploading function code';
+              twisters.put(`${lambdaCdkPath}:uploading`, {
+                meta: {prefix: logger.prefix},
+                text: uploadingProgressText,
+              });
+
+              return updateLambdaFunctionCode(watchOutdir, functionName)
+                .then(() => {
+                  twisters.put(`${lambdaCdkPath}:uploading`, {
+                    meta: {prefix: logger.prefix},
+                    text: uploadingProgressText,
+                    active: false,
+                  });
+                })
+                .catch((e) => {
+                  twisters.put(`${lambdaCdkPath}:uploading`, {
+                    text: uploadingProgressText,
+                    meta: {error: e},
+                    active: false,
+                  });
+                });
+            };
+
+            if (!options.skipInitial) {
+              await updateFunction();
+            }
+
             logger.log('waiting for changes');
             esbuild
               .build({
@@ -72,30 +101,9 @@ export const watch = async (
                       logger.error(
                         `failed to rebuild lambda function code ${error.toString()}`,
                       );
-                      return;
+                    } else {
+                      updateFunction();
                     }
-
-                    const uploadingProgressText = 'uploading function code';
-                    twisters.put(`${lambdaCdkPath}:uploading`, {
-                      meta: {prefix: logger.prefix},
-                      text: uploadingProgressText,
-                    });
-
-                    updateLambdaFunctionCode(watchOutdir, functionName)
-                      .then(() => {
-                        twisters.put(`${lambdaCdkPath}:uploading`, {
-                          meta: {prefix: logger.prefix},
-                          text: uploadingProgressText,
-                          active: false,
-                        });
-                      })
-                      .catch((e) => {
-                        twisters.put(`${lambdaCdkPath}:uploading`, {
-                          text: uploadingProgressText,
-                          meta: {error: e},
-                          active: false,
-                        });
-                      });
                   },
                 },
               })

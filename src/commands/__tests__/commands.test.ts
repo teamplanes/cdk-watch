@@ -19,7 +19,11 @@ describe('CLI commands', () => {
   test('program runs watch as the default command', async () => {
     const program = new CdkWatchCommand('1');
     await program.parseAsync(buildArgv('**'));
-    expect(watch).toBeCalledWith('**', {logs: true}, expect.anything());
+    expect(watch).toBeCalledWith(
+      '**',
+      expect.objectContaining({logs: true}),
+      expect.anything(),
+    );
     expect(list).toBeCalledTimes(0);
     expect(logs).toBeCalledTimes(0);
     expect(once).toBeCalledTimes(0);
@@ -28,7 +32,37 @@ describe('CLI commands', () => {
   test('program runs watch when command name is provided', async () => {
     const program = new CdkWatchCommand('1');
     await program.parseAsync(buildArgv('watch My/Path'));
-    expect(watch).toBeCalledWith('My/Path', {logs: true}, expect.anything());
+    expect(watch).toBeCalledWith(
+      'My/Path',
+      expect.objectContaining({logs: true}),
+      expect.anything(),
+    );
+    expect(list).toBeCalledTimes(0);
+    expect(logs).toBeCalledTimes(0);
+    expect(once).toBeCalledTimes(0);
+  });
+
+  test('program passes skip-initial boolean to watch function', async () => {
+    const program = new CdkWatchCommand('1');
+    await program.parseAsync(buildArgv('watch My/Path --skip-initial'));
+    expect(watch).toBeCalledWith(
+      'My/Path',
+      expect.objectContaining({skipInitial: true}),
+      expect.anything(),
+    );
+    expect(list).toBeCalledTimes(0);
+    expect(logs).toBeCalledTimes(0);
+    expect(once).toBeCalledTimes(0);
+  });
+
+  test('program passes skip-initial as false to watch function when not provided', async () => {
+    const program = new CdkWatchCommand('1');
+    await program.parseAsync(buildArgv('watch My/Path'));
+    expect(watch).toBeCalledWith(
+      'My/Path',
+      expect.objectContaining({skipInitial: false}),
+      expect.anything(),
+    );
     expect(list).toBeCalledTimes(0);
     expect(logs).toBeCalledTimes(0);
     expect(once).toBeCalledTimes(0);
@@ -64,7 +98,7 @@ describe('CLI commands', () => {
       await program.parseAsync(buildArgv(`watch My/Path ${flag}`));
       expect(watch).toBeCalledWith(
         'My/Path',
-        {logs: expected},
+        expect.objectContaining({logs: expected}),
         expect.anything(),
       );
     },
