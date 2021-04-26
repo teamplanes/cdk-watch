@@ -8,12 +8,14 @@ import {Construct, RemovalPolicy} from '@aws-cdk/core';
 import execa from 'execa';
 import * as fs from 'fs-extra';
 import * as path from 'path';
+import objectHash from 'object-hash';
 import {CDK_WATCH_OUTDIR} from '../consts';
 
 interface NodeModulesLayerProps {
   depsLockFilePath?: string;
   pkgPath: string;
   nodeModules: string[];
+  skip?: boolean;
 }
 
 enum Installer {
@@ -49,13 +51,17 @@ const getDepsLock = (propsDepsLockFilePath?: string) => {
 };
 
 export class NodeModulesLayer extends LayerVersion {
+  public readonly layerVersion: string;
+
   constructor(scope: Construct, id: string, props: NodeModulesLayerProps) {
     const depsLockFilePath = getDepsLock(props.depsLockFilePath);
 
     const {pkgPath} = props;
 
     // Determine dependencies versions, lock file and installer
-    const dependencies = extractDependencies(pkgPath, props.nodeModules);
+    const dependenciesPackageJson = {
+      dependencies: extractDependencies(pkgPath, props.nodeModules),
+    };
     let installer = Installer.NPM;
     let lockFile = LockFile.NPM;
     if (depsLockFilePath.endsWith(LockFile.YARN)) {
@@ -74,21 +80,30 @@ export class NodeModulesLayer extends LayerVersion {
 
     fs.ensureDirSync(outputDir);
     fs.copyFileSync(depsLockFilePath, path.join(outputDir, lockFile));
-    fs.writeJsonSync(path.join(outputDir, 'package.json'), {dependencies});
+    fs.writeJsonSync(
+      path.join(outputDir, 'package.json'),
+      dependenciesPackageJson,
+    );
+    const layerVersion = objectHash(dependenciesPackageJson);
 
-    // eslint-disable-next-line no-console
-    console.log('Installing node_modules in layer');
-    execa.sync(installer, ['install'], {
-      cwd: outputDir,
-      stderr: 'inherit',
-      stdout: 'ignore',
-      stdin: 'ignore',
-    });
+    if (!props.skip) {
+      // eslint-disable-next-line no-console
+      console.log('Installing node_modules in layer');
+      execa.sync(installer, ['install'], {
+        cwd: outputDir,
+        stderr: 'inherit',
+        stdout: 'ignore',
+        stdin: 'ignore',
+      });
+    }
 
     super(scope, id, {
       removalPolicy: RemovalPolicy.DESTROY,
       description: 'NodeJS Modules Packaged into a Layer by cdk-watch',
       code: Code.fromAsset(layerBase),
+      layerVersionName: layerVersion,
     });
+
+    this.layerVersion = layerVersion;
   }
 }

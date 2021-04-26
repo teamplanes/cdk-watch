@@ -1,4 +1,4 @@
-import {CloudFormation} from 'aws-sdk';
+import {CloudFormation, Lambda} from 'aws-sdk';
 import {LambdaManifestType, CdkWatchManifest, LambdaDetail} from '../types.d';
 import {resolveStackNameForLambda} from './resolveStackNameForLambda';
 
@@ -7,27 +7,37 @@ const resolveLambdaNameFromManifest = async (
 ): Promise<{
   functionName: string;
   lambdaManifest: LambdaManifestType;
+  layers: string[];
 }> => {
   const cfn = new CloudFormation({maxRetries: 10});
+  const lambda = new Lambda({maxRetries: 10});
   const lambdaStackName = await resolveStackNameForLambda(lambdaManifest);
-
-  return cfn
+  const {StackResourceDetail} = await cfn
     .describeStackResource({
       StackName: lambdaStackName,
       LogicalResourceId: lambdaManifest.lambdaLogicalId,
     })
-    .promise()
-    .then(({StackResourceDetail}) => {
-      if (!StackResourceDetail?.PhysicalResourceId) {
-        throw new Error(
-          `Could not find name for lambda with Logical ID ${lambdaManifest.lambdaLogicalId}`,
-        );
-      }
-      return {
-        functionName: StackResourceDetail?.PhysicalResourceId as string,
-        lambdaManifest,
-      };
-    });
+    .promise();
+
+  if (!StackResourceDetail?.PhysicalResourceId) {
+    throw new Error(
+      `Could not find name for lambda with Logical ID ${lambdaManifest.lambdaLogicalId}`,
+    );
+  }
+  const functionName = StackResourceDetail?.PhysicalResourceId as string;
+  const config = await lambda
+    .getFunctionConfiguration({FunctionName: functionName})
+    .promise();
+
+  return {
+    layers:
+      config.Layers?.map((layer) => {
+        const {6: name} = layer.Arn?.split(':') || '';
+        return name;
+      }).filter(Boolean) || [],
+    functionName,
+    lambdaManifest,
+  };
 };
 
 export const resolveLambdaNamesFromManifest = (
