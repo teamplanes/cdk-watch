@@ -14,6 +14,8 @@ export class RealTimeLambdaLogsAPI extends cdk.NestedStack {
 
   public readonly disconnectFn: lambda.Function;
 
+  public readonly defaultFn: lambda.Function;
+
   /** role needed to send messages to websocket clients */
   public readonly apigwRole: iam.Role;
 
@@ -132,10 +134,20 @@ export class RealTimeLambdaLogsAPI extends cdk.NestedStack {
       ...lambdaProps,
     });
 
+    const defaultLambda = new lambda.Function(this, 'DefaultLambda', {
+      handler: 'index.onMessage',
+      description: 'Default',
+      ...lambdaProps,
+    });
+
     // access role for the socket api to access the socket lambda
     const policy = new iam.PolicyStatement({
       effect: iam.Effect.ALLOW,
-      resources: [connectLambda.functionArn, disconnectLambda.functionArn],
+      resources: [
+        connectLambda.functionArn,
+        disconnectLambda.functionArn,
+        defaultLambda.functionArn,
+      ],
       actions: ['lambda:InvokeFunction'],
     });
 
@@ -173,6 +185,20 @@ export class RealTimeLambdaLogsAPI extends cdk.NestedStack {
       },
     );
 
+    const defaultIntegration = new apigwv2.CfnIntegration(
+      this,
+      'default-lambda-integration',
+      {
+        apiId: this.websocketApi.ref,
+        integrationType: 'AWS_PROXY',
+        integrationUri: this.createIntegrationStr(
+          stack.region,
+          defaultLambda.functionArn,
+        ),
+        credentialsArn: role.roleArn,
+      },
+    );
+
     // Example route definition
     const connectRoute = new apigwv2.CfnRoute(this, 'connect-route', {
       apiId: this.websocketApi.ref,
@@ -188,9 +214,17 @@ export class RealTimeLambdaLogsAPI extends cdk.NestedStack {
       target: `integrations/${disconnectIntegration.ref}`,
     });
 
+    const defaultRoute = new apigwv2.CfnRoute(this, 'default-route', {
+      apiId: this.websocketApi.ref,
+      routeKey: '$default',
+      authorizationType: 'NONE',
+      target: `integrations/${defaultIntegration.ref}`,
+    });
+
     // allow other other tables to grant permissions to these lambdas
     this.connectFn = connectLambda;
     this.disconnectFn = disconnectLambda;
+    this.defaultFn = defaultLambda;
     this.connectionTable = websocketTable;
     this.apigwRole = messageLambdaRole;
 
@@ -217,6 +251,7 @@ export class RealTimeLambdaLogsAPI extends cdk.NestedStack {
     const routes = new cdk.ConcreteDependable();
     routes.add(connectRoute);
     routes.add(disconnectRoute);
+    routes.add(defaultRoute);
 
     // add the dependency
     apigwWssDeployment.node.addDependency(routes);

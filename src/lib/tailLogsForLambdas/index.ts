@@ -71,9 +71,15 @@ const tailLogsForLambdas = async (
       .on('log', (log) => {
         loggers[log.lambda].log(...log.log);
       })
+      .on('disconnect', () => {
+        // eslint-disable-next-line no-console
+        console.error(`Logs WebSocket Disconnected`);
+        process.exit(1);
+      })
       .on('error', (error) => {
         // eslint-disable-next-line no-console
         console.error(`WebSocket Error`, error);
+        process.exit(1);
       });
   });
 };
