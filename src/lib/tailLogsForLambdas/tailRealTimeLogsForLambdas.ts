@@ -8,6 +8,8 @@ import {Log} from '../../lambda-extension/cdk-watch-lambda-wrapper/patchConsole'
 
 interface LogEventEmitter extends EventEmitter {
   on(event: 'log', cb: (log: Log) => void): this;
+  on(event: 'disconnect', cb: () => void): this;
+  on(event: 'connect', cb: () => void): this;
   on(event: 'error', cb: (error: Error) => void): this;
 }
 
@@ -48,6 +50,12 @@ const tailRealTimeLogsForLambdas = (
 
   socket.onopen = () => {
     emitter.emit('connect');
+    setInterval(() => {
+      socket.send('ping');
+    }, 60 * 1000);
+    setImmediate(() => {
+      socket.send('ping');
+    });
   };
 
   socket.onclose = () => {
@@ -60,9 +68,11 @@ const tailRealTimeLogsForLambdas = (
 
   socket.onmessage = ({data}) => {
     const logs: Log[] = JSON.parse(data);
-    logs.forEach((log) => {
-      emitter.emit('log', log);
-    });
+    if (Array.isArray(logs)) {
+      logs.forEach((log) => {
+        emitter.emit('log', log);
+      });
+    }
   };
 
   return emitter;
