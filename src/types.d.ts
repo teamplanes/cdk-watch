@@ -8,6 +8,7 @@ export interface LambdaManifestType {
   nestedStackLogicalIds: string[];
   realTimeLogsApiLogicalId: string | undefined;
   realTimeLogsStackLogicalId: string | undefined;
+  nodeModulesLayerVersion: string | undefined;
 }
 
 export interface LambdaMap {
@@ -23,4 +24,5 @@ export interface LambdaDetail {
   functionName: string;
   lambdaCdkPath: string;
   lambdaManifest: LambdaManifestType;
+  layers: string[];
 }
