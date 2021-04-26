@@ -6,6 +6,7 @@
 - Your code will be watched and built with the same esbuild config as when deploying your stack
 - Simply switch-out your existing `NodejsFunction` with the `WatchableNodejsFunction` construct
 - Opt-in to real-time logs, so no more digging through CloudWatch to find your Lambda's logs
+- Load your node modules as a separate lambda layer (allows for faster build/upload times)
 - Written in TypeScript
 - No extra infrastructure required, unless you are opting-in to real-time logs
 
@@ -77,6 +78,30 @@ assign a Lambda Layer Extension to wrap your lambda, the wrapper will patch the
 `console` and forward all logs to all API Gateway connections. If you have
 multiple lambdas in your stack it'll only create the require infrastructure
 once, and reuse it for all lambdas that need it.
+
+## Node Modules Layer
+
+CDK-Watch allows you to install your node-modules a stand alone layer. This
+means that when you deploy `cdk-watch` will install your modules in a separate
+asset and install them as the lambda's layer. This is great for dev-performance
+as the upload bundle will be much smaller. You can configure this using the
+`bundling.nodeModulesLayer` property:
+
+```ts
+bundling: {
+  // Install only "knex" as a standalone layer
+  nodeModulesLayer: {include: ['knex']}
+}
+```
+
+OR:
+
+```ts
+bundling: {
+  // Install every module found in your package.json except "knex"
+  nodeModulesLayer: {exclude: ['knex']}
+}
+```
 
 ## How, what & why?
 
