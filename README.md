@@ -1,15 +1,19 @@
-<h1 align="center"><code>cdk-watch</code> 👀</h1>
+# `cdk-watch` 👀
 
-<p align="center">
-  Run your CDK Stack's Lambda functions as if they were in a development environment
-</p>
+> Run your CDK Stack's Lambda functions as if they were in a development environment.
 
-<p align="center">
-  <code>cdkw "MyStack/API/**"</code><br />
-   <small>
-    <code>yarn add cdk-watch</code>
-  </small>
-</p>
+- As simple as `cdkw "MyApp/MyApi/**"`
+- Your code will be watched and built with the same esbuild config as when deploying your stack
+- Simply switch-out your existing `NodejsFunction` with the `WatchableNodejsFunction` construct
+- Opt-in to real-time logs, so no more digging through CloudWatch to find your Lambda's logs
+- Written in TypeScript
+- No extra infrastructure required, unless you are opting-in to real-time logs
+
+---
+
+<div align="center">
+  <img src="https://cdk-watch-static.s3.eu-west-2.amazonaws.com/demo.gif" width="400">
+</div>
 
 ---
 
@@ -53,6 +57,26 @@ $ npm run cdkw "**"
 *Skip to the [command reference](#command-reference).*
 
 ---
+
+## Real-time Logs
+
+`cdk-watch` provides real-time logs over web-sockets to make the development
+feedback-loop faster when debugging your lambdas. This is an additional feature
+that requires opt-in, and you have two options for achieving this.
+1. **Turn on for all Lambdas:** To turn on real-time logging by default for all
+   watchable lambdas in your stack you can set the context variable
+   `cdk-watch:forceRealTimeLoggingEnabled` to `true`.
+2. To set an individual Lambda to support real-time logging you can pass a prop
+   to the `WatchableNodejsFunction`: `watchOptions.realTimeLoggingEnabled=true`.
+
+### How does real-time logging work?
+
+When deploying your stack the `WatchableNodejsFunction` will include the
+necessary infrastructure to support WebSockets via API Gateway. It'll also
+assign a Lambda Layer Extension to wrap your lambda, the wrapper will patch the
+`console` and forward all logs to all API Gateway connections. If you have
+multiple lambdas in your stack it'll only create the require infrastructure
+once, and reuse it for all lambdas that need it.
 
 ## How, what & why?
 
