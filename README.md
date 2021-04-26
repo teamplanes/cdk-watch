@@ -12,7 +12,7 @@
 ---
 
 <div align="center">
-  <img src="https://cdk-watch-static.s3.eu-west-2.amazonaws.com/demo.gif" width="400">
+  <img src="https://cdk-watch-static.s3.eu-west-2.amazonaws.com/demo.gif" width="500">
 </div>
 
 ---
