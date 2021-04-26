@@ -81,8 +81,8 @@ once, and reuse it for all lambdas that need it.
 
 ## Node Modules Layer
 
-CDK-Watch allows you to install your node-modules a stand alone layer. This
-means that when you deploy `cdk-watch` will install your modules in a separate
+CDK-Watch allows you to install your node-modules as a stand alone layer. This
+means that when you deploy, `cdk-watch` will install your modules in a separate
 asset and install them as the lambda's layer. This is great for dev-performance
 as the upload bundle will be much smaller. You can configure this using the
 `bundling.nodeModulesLayer` property:
