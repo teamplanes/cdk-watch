@@ -1,5 +1,6 @@
 import * as path from 'path';
 import * as esbuild from 'esbuild';
+import chalk from 'chalk';
 import {copyCdkAssetToWatchOutdir} from '../lib/copyCdkAssetToWatchOutdir';
 import {filterManifestByPath} from '../lib/filterManifestByPath';
 import {initAwsSdk} from '../lib/initAwsSdk';
@@ -18,6 +19,7 @@ export const watch = async (
     app: string;
     profile: string;
     logs: boolean;
+    skipInitial: boolean;
     forceCloudwatch?: boolean;
   },
 ): Promise<void> => {
@@ -48,12 +50,52 @@ export const watch = async (
       }
       return Promise.all(
         lambdaDetails.map(
-          async ({functionName, lambdaCdkPath, lambdaManifest}) => {
+          async ({functionName, lambdaCdkPath, layers, lambdaManifest}) => {
+            if (
+              lambdaManifest.nodeModulesLayerVersion &&
+              !layers.includes(lambdaManifest.nodeModulesLayerVersion)
+            ) {
+              // eslint-disable-next-line no-console
+              console.warn(
+                chalk.yellow(
+                  '[Warning]: Function modules layer is out of sync with published layer version, this can lead to runtime errors. To fix, do a full `cdk deploy`.',
+                ),
+              );
+            }
+
             const logger = createCLILoggerForLambda(
               lambdaCdkPath,
               lambdaDetails.length > 1,
             );
             const watchOutdir = copyCdkAssetToWatchOutdir(lambdaManifest);
+
+            const updateFunction = () => {
+              const uploadingProgressText = 'uploading function code';
+              twisters.put(`${lambdaCdkPath}:uploading`, {
+                meta: {prefix: logger.prefix},
+                text: uploadingProgressText,
+              });
+
+              return updateLambdaFunctionCode(watchOutdir, functionName)
+                .then(() => {
+                  twisters.put(`${lambdaCdkPath}:uploading`, {
+                    meta: {prefix: logger.prefix},
+                    text: uploadingProgressText,
+                    active: false,
+                  });
+                })
+                .catch((e) => {
+                  twisters.put(`${lambdaCdkPath}:uploading`, {
+                    text: uploadingProgressText,
+                    meta: {error: e},
+                    active: false,
+                  });
+                });
+            };
+
+            if (!options.skipInitial) {
+              await updateFunction();
+            }
 
             logger.log('waiting for changes');
             esbuild
@@ -72,30 +114,9 @@ export const watch = async (
                       logger.error(
                         `failed to rebuild lambda function code ${error.toString()}`,
                       );
-                      return;
+                    } else {
+                      updateFunction();
                     }
-
-                    const uploadingProgressText = 'uploading function code';
-                    twisters.put(`${lambdaCdkPath}:uploading`, {
-                      meta: {prefix: logger.prefix},
-                      text: uploadingProgressText,
-                    });
-
-                    updateLambdaFunctionCode(watchOutdir, functionName)
-                      .then(() => {
-                        twisters.put(`${lambdaCdkPath}:uploading`, {
-                          meta: {prefix: logger.prefix},
-                          text: uploadingProgressText,
-                          active: false,
-                        });
-                      })
-                      .catch((e) => {
-                        twisters.put(`${lambdaCdkPath}:uploading`, {
-                          text: uploadingProgressText,
-                          meta: {error: e},
-                          active: false,
-                        });
-                      });
                   },
                 },
               })

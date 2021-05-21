@@ -91,6 +91,8 @@ class WatchableNodejsFunction extends NodejsFunction {
 
   public readonly local?: cdk.ILocalBundling;
 
+  private readonly nodeModulesLayerVersion: string | undefined;
+
   constructor(
     scope: cdk.Construct,
     id: string,
@@ -127,14 +129,15 @@ class WatchableNodejsFunction extends NodejsFunction {
     });
     const shouldSkipInstall =
       scope.node.tryGetContext(CDK_WATCH_CONTEXT_NODE_MODULES_DISABLED) === '1';
-    if (moduleNames && !shouldSkipInstall) {
-      this.addLayers(
-        new NodeModulesLayer(this, 'NodeModulesLayer', {
-          nodeModules: moduleNames,
-          pkgPath,
-          depsLockFilePath: props.depsLockFilePath,
-        }),
-      );
+    if (moduleNames) {
+      const nodeModulesLayer = new NodeModulesLayer(this, 'NodeModulesLayer', {
+        nodeModules: moduleNames,
+        pkgPath,
+        depsLockFilePath: props.depsLockFilePath,
+        skip: shouldSkipInstall,
+      });
+      this.addLayers(nodeModulesLayer);
+      this.nodeModulesLayerVersion = nodeModulesLayer.layerVersion;
     }
 
     const {entry} = props;
@@ -247,6 +250,7 @@ class WatchableNodejsFunction extends NodejsFunction {
         : {};
     cdkWatchManifest.lambdas[this.node.path] = {
       assetPath,
+      nodeModulesLayerVersion: this.nodeModulesLayerVersion,
       realTimeLogsStackLogicalId: this.cdkWatchLogsApi
         ? this.stack.getLogicalId(
             this.cdkWatchLogsApi.nestedStackResource as CfnElement,
