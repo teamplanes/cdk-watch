@@ -242,6 +242,13 @@ class WatchableNodejsFunction extends NodejsFunction {
       region: this.stack.region,
       lambdas: {},
     };
+
+    if (cdk.Token.isUnresolved(this.stack.region)) {
+      throw new Error(
+        '`stack.region` is an unresolved token. `cdk-watch` requires a concrete region to be set.',
+      );
+    }
+
     cdkWatchManifest.region = this.stack.region;
 
     cdkWatchManifest.lambdas =

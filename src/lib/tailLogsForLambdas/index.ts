@@ -69,7 +69,12 @@ const tailLogsForLambdas = async (
       realTimeLogsFunctionMap[key].map(({functionName}) => functionName),
     )
       .on('log', (log) => {
-        loggers[log.lambda].log(...log.log);
+        if (loggers[log.lambda]) {
+          loggers[log.lambda].log(...log.log);
+        } else {
+          // eslint-disable-next-line no-console
+          console.log(...log.log);
+        }
       })
       .on('disconnect', () => {
         // eslint-disable-next-line no-console
