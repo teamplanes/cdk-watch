@@ -18,13 +18,11 @@ const tailLogsForLambdas = async (
     : Object.keys(realTimeEndpointsForLambdas).filter(
         (key) => !realTimeEndpointsForLambdas[key],
       )
-  )
-    .map((key) => {
-      const found = lambdaFunctions.find((func) => func.lambdaCdkPath === key);
-      if (!found) throw new Error('Lambda key not found'); // should never happen.
-      return found;
-    })
-    .map(({functionName}) => functionName);
+  ).map((key) => {
+    const found = lambdaFunctions.find((func) => func.lambdaCdkPath === key);
+    if (!found) throw new Error('Lambda key not found'); // should never happen.
+    return found;
+  });
 
   // Keyed by the endpoint, values are arrays of lambda details
   const realTimeLogsFunctionMap = forceCloudwatch
@@ -44,9 +42,12 @@ const tailLogsForLambdas = async (
           };
         }, {} as Record<string, LambdaDetail[]>);
 
-  cloudwatchFunctions.forEach((name) => {
-    const logger = createCLILoggerForLambda(name, lambdaFunctions.length > 1);
-    tailCloudWatchLogsForLambda(name)
+  cloudwatchFunctions.forEach((lambda) => {
+    const logger = createCLILoggerForLambda(
+      lambda.lambdaCdkPath,
+      lambdaFunctions.length > 1,
+    );
+    tailCloudWatchLogsForLambda(lambda.functionName)
       .on('log', (log) => logger.log(log.toString()))
       .on('error', (log) => logger.error(log));
   });
