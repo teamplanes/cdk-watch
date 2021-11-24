@@ -1,7 +1,7 @@
 name: release
 on:
   push:
-    branches: [main, next]
+    branches: [main, next, cdkv2]
 jobs:
   release:
     runs-on: ubuntu-latest
@@ -35,6 +35,15 @@ jobs:
           git config user.email hello@planes.studio
         env:
           GITHUB_ACTOR: ${{ secrets.GITHUB_ACTOR }}
+
+      # TEMP: Only run on cdkv2 branch
+      - name: generate tag and release body (cdkv2)
+        if: github.ref == 'refs/heads/next'
+        run: |
+          yarn standard-version -i RELEASE_BODY.md --skip.commit --prerelease cdkv2
+          npm publish --tag cdkv2
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       # Only run on next branch
       - name: generate tag and release body (next)
