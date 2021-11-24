@@ -201,6 +201,17 @@ class WatchableNodejsFunction extends NodejsFunction {
         this.cdkWatchLogsApi.CDK_WATCH_API_GATEWAY_MANAGEMENT_URL,
       );
     }
+
+    this.node.addValidation({
+      validate: () => {
+        try {
+          this.outputManifest();
+          return [];
+        } catch (error) {
+          return [(error as Error).message];
+        }
+      },
+    });
   }
 
   /**
@@ -223,9 +234,7 @@ class WatchableNodejsFunction extends NodejsFunction {
    * the info it needs to run the lambdas in watch mode. This will include the
    * logical IDs and the stack name (and logical IDs of nested stacks).
    */
-  public synthesize(session: cdk.ISynthesisSession): void {
-    // super.synthesize(session);
-
+  public outputManifest(): void {
     const asset = this.node
       .findAll()
       .find((construct) => construct instanceof Asset) as Asset;
@@ -236,7 +245,7 @@ class WatchableNodejsFunction extends NodejsFunction {
       );
     }
 
-    const assetPath = path.join(session.outdir, asset.assetPath);
+    const assetPath = path.join('', asset.assetPath);
     const [rootStack, ...nestedStacks] = this.parentStacks;
     const cdkWatchManifest = readManifest() || {
       region: this.stack.region,
