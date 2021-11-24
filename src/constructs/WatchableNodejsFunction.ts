@@ -4,16 +4,16 @@ import {
   BundlingOptions,
   NodejsFunction,
   NodejsFunctionProps,
-} from '@aws-cdk/aws-lambda-nodejs';
-import {Runtime} from '@aws-cdk/aws-lambda';
-import {Asset} from '@aws-cdk/aws-s3-assets';
+} from 'aws-cdk-lib/aws-lambda-nodejs';
+import {Runtime} from 'aws-cdk-lib/aws-lambda';
+import {Asset} from 'aws-cdk-lib/aws-s3-assets';
 import * as path from 'path';
 import * as fs from 'fs-extra';
 import findUp from 'find-up';
-import * as cdk from '@aws-cdk/core';
+import * as cdk from 'aws-cdk-lib';
 import {BuildOptions, Loader} from 'esbuild';
-import {CfnElement} from '@aws-cdk/core';
 import minimatch from 'minimatch';
+import {Construct} from 'constructs';
 import {readManifest} from '../lib/readManifest';
 import {writeManifest} from '../lib/writeManifest';
 import {RealTimeLambdaLogsAPI} from './RealTimeLambdaLogsAPI';
@@ -94,7 +94,7 @@ class WatchableNodejsFunction extends NodejsFunction {
   private readonly nodeModulesLayerVersion: string | undefined;
 
   constructor(
-    scope: cdk.Construct,
+    scope: Construct,
     id: string,
     props: WatchableNodejsFunctionProps,
   ) {
@@ -224,7 +224,7 @@ class WatchableNodejsFunction extends NodejsFunction {
    * logical IDs and the stack name (and logical IDs of nested stacks).
    */
   public synthesize(session: cdk.ISynthesisSession): void {
-    super.synthesize(session);
+    // super.synthesize(session);
 
     const asset = this.node
       .findAll()
@@ -260,7 +260,7 @@ class WatchableNodejsFunction extends NodejsFunction {
       nodeModulesLayerVersion: this.nodeModulesLayerVersion,
       realTimeLogsStackLogicalId: this.cdkWatchLogsApi
         ? this.stack.getLogicalId(
-            this.cdkWatchLogsApi.nestedStackResource as CfnElement,
+            this.cdkWatchLogsApi.nestedStackResource as cdk.CfnElement,
           )
         : undefined,
       realTimeLogsApiLogicalId: this.cdkWatchLogsApi?.websocketApi

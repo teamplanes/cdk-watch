@@ -1,12 +1,13 @@
 /* eslint-disable no-new */
 import * as path from 'path';
-import * as cdk from '@aws-cdk/core';
-import * as dynamodb from '@aws-cdk/aws-dynamodb';
-import * as apigwv2 from '@aws-cdk/aws-apigatewayv2';
-import * as lambda from '@aws-cdk/aws-lambda';
-import * as logs from '@aws-cdk/aws-logs';
-import * as iam from '@aws-cdk/aws-iam';
-import {Stack} from '@aws-cdk/core';
+import * as cdk from 'aws-cdk-lib';
+import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
+import * as apigwv2 from 'aws-cdk-lib/aws-apigatewayv2';
+import * as lambda from 'aws-cdk-lib/aws-lambda';
+import * as logs from 'aws-cdk-lib/aws-logs';
+import * as iam from 'aws-cdk-lib/aws-iam';
+import {Stack} from 'aws-cdk-lib/core';
+import {Construct, DependencyGroup} from 'constructs';
 import {LogsLayerVersion} from './LogsLayerVersion';
 
 export class RealTimeLambdaLogsAPI extends cdk.NestedStack {
@@ -33,7 +34,7 @@ export class RealTimeLambdaLogsAPI extends cdk.NestedStack {
 
   public lambdaDynamoConnectionPolicy: iam.PolicyStatement;
 
-  constructor(scope: cdk.Construct, id: string) {
+  constructor(scope: Construct, id: string) {
     super(scope, id);
 
     const stack = Stack.of(this);
@@ -248,7 +249,7 @@ export class RealTimeLambdaLogsAPI extends cdk.NestedStack {
     });
 
     // all routes are dependencies of the deployment
-    const routes = new cdk.ConcreteDependable();
+    const routes = new DependencyGroup();
     routes.add(connectRoute);
     routes.add(disconnectRoute);
     routes.add(defaultRoute);

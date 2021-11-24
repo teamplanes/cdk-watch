@@ -1,14 +1,14 @@
-import {Code, LayerVersion} from '@aws-cdk/aws-lambda';
 import {
   extractDependencies,
   findUp,
-  LockFile,
-} from '@aws-cdk/aws-lambda-nodejs/lib/util';
-import {Construct, RemovalPolicy} from '@aws-cdk/core';
+} from 'aws-cdk-lib/aws-lambda-nodejs/lib/util';
 import execa from 'execa';
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import objectHash from 'object-hash';
+import {Code, LayerVersion} from 'aws-cdk-lib/aws-lambda';
+import {Construct} from 'constructs';
+import {RemovalPolicy} from 'aws-cdk-lib';
 import {CDK_WATCH_OUTDIR} from '../consts';
 
 interface NodeModulesLayerProps {
@@ -21,6 +21,12 @@ interface NodeModulesLayerProps {
 enum Installer {
   NPM = 'npm',
   YARN = 'yarn',
+}
+
+// TODO: Use new PackageManager class instead
+enum LockFile {
+  NPM = 'package-lock.json',
+  YARN = 'yarn.lock',
 }
 
 /**

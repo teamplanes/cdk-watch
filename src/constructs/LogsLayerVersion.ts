@@ -1,6 +1,7 @@
 import * as path from 'path';
-import {Code, LayerVersion} from '@aws-cdk/aws-lambda';
-import {Construct, RemovalPolicy} from '@aws-cdk/core';
+import {Construct} from 'constructs';
+import {RemovalPolicy} from 'aws-cdk-lib';
+import {Code, LayerVersion} from 'aws-cdk-lib/aws-lambda';
 
 export class LogsLayerVersion extends LayerVersion {
   constructor(scope: Construct, id: string) {
