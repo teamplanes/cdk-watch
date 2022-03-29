@@ -6,7 +6,6 @@ import * as apigwv2 from 'aws-cdk-lib/aws-apigatewayv2';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as logs from 'aws-cdk-lib/aws-logs';
 import * as iam from 'aws-cdk-lib/aws-iam';
-import {Stack} from 'aws-cdk-lib/core';
 import {Construct, DependencyGroup} from 'constructs';
 import {LogsLayerVersion} from './LogsLayerVersion';
 
@@ -37,7 +36,7 @@ export class RealTimeLambdaLogsAPI extends cdk.NestedStack {
   constructor(scope: Construct, id: string) {
     super(scope, id);
 
-    const stack = Stack.of(this);
+    const stack = cdk.Stack.of(this);
     const routeSelectionKey = 'action';
     // NOTE: This file will be bundled into /lib/index.js, so this path must be relative to that
     const websocketHandlerCodePath = path.join(__dirname, 'websocketHandlers');
