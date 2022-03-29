@@ -4,16 +4,17 @@ import {
   BundlingOptions,
   NodejsFunction,
   NodejsFunctionProps,
-} from '@aws-cdk/aws-lambda-nodejs';
-import {Runtime} from '@aws-cdk/aws-lambda';
-import {Asset} from '@aws-cdk/aws-s3-assets';
+} from 'aws-cdk-lib/aws-lambda-nodejs';
+import {Runtime} from 'aws-cdk-lib/aws-lambda';
+import {Asset} from 'aws-cdk-lib/aws-s3-assets';
 import * as path from 'path';
 import * as fs from 'fs-extra';
 import findUp from 'find-up';
-import * as cdk from '@aws-cdk/core';
+import * as cdk from 'aws-cdk-lib';
 import {BuildOptions, Loader} from 'esbuild';
-import {CfnElement} from '@aws-cdk/core';
 import minimatch from 'minimatch';
+import {Construct} from 'constructs';
+import {AssetStaging} from 'aws-cdk-lib';
 import {readManifest} from '../lib/readManifest';
 import {writeManifest} from '../lib/writeManifest';
 import {RealTimeLambdaLogsAPI} from './RealTimeLambdaLogsAPI';
@@ -94,7 +95,7 @@ class WatchableNodejsFunction extends NodejsFunction {
   private readonly nodeModulesLayerVersion: string | undefined;
 
   constructor(
-    scope: cdk.Construct,
+    scope: Construct,
     id: string,
     props: WatchableNodejsFunctionProps,
   ) {
@@ -201,6 +202,17 @@ class WatchableNodejsFunction extends NodejsFunction {
         this.cdkWatchLogsApi.CDK_WATCH_API_GATEWAY_MANAGEMENT_URL,
       );
     }
+
+    this.node.addValidation({
+      validate: () => {
+        try {
+          this.outputManifest();
+          return [];
+        } catch (error) {
+          return [(error as Error).message];
+        }
+      },
+    });
   }
 
   /**
@@ -223,12 +235,10 @@ class WatchableNodejsFunction extends NodejsFunction {
    * the info it needs to run the lambdas in watch mode. This will include the
    * logical IDs and the stack name (and logical IDs of nested stacks).
    */
-  public synthesize(session: cdk.ISynthesisSession): void {
-    super.synthesize(session);
-
-    const asset = this.node
-      .findAll()
-      .find((construct) => construct instanceof Asset) as Asset;
+  public outputManifest(): void {
+    const asset = this.node.findAll().find((construct) => {
+      return construct instanceof Asset;
+    }) as Asset;
 
     if (!asset) {
       throw new Error(
@@ -236,7 +246,16 @@ class WatchableNodejsFunction extends NodejsFunction {
       );
     }
 
-    const assetPath = path.join(session.outdir, asset.assetPath);
+    const assetStaging = asset.node
+      .findAll()
+      .find((construct) => construct.node.id === 'Stage') as AssetStaging;
+
+    if (!assetStaging) {
+      throw new Error(
+        "WatchableNodejsFunction could not find an AssetStaging in it's children",
+      );
+    }
+
     const [rootStack, ...nestedStacks] = this.parentStacks;
     const cdkWatchManifest = readManifest() || {
       region: this.stack.region,
@@ -256,11 +275,11 @@ class WatchableNodejsFunction extends NodejsFunction {
         ? cdkWatchManifest.lambdas
         : {};
     cdkWatchManifest.lambdas[this.node.path] = {
-      assetPath,
+      assetPath: assetStaging.absoluteStagedPath,
       nodeModulesLayerVersion: this.nodeModulesLayerVersion,
       realTimeLogsStackLogicalId: this.cdkWatchLogsApi
         ? this.stack.getLogicalId(
-            this.cdkWatchLogsApi.nestedStackResource as CfnElement,
+            this.cdkWatchLogsApi.nestedStackResource as cdk.CfnElement,
           )
         : undefined,
       realTimeLogsApiLogicalId: this.cdkWatchLogsApi?.websocketApi

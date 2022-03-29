@@ -8,7 +8,7 @@
   "bin": {
     "cdkw": "lib/cli.js"
   },
-  "version": "0.0.25-next.3",
+  "version": "1.0.0-cdkv2.5",
   "scripts": {
     "type-check": "tsc -p tsconfig.json --noEmit",
     "build": "tsup src/index.ts src/cli.ts src/index.ts src/websocketHandlers/index.ts src/lambda-extension/cdk-watch-lambda-wrapper/index.ts --no-splitting -d lib --clean --dts=src/index.ts",
@@ -46,26 +46,15 @@
     "ws": "^7.4.4"
   },
   "peerDependencies": {
-    "@aws-cdk/aws-apigatewayv2": "^1.100.0",
-    "@aws-cdk/aws-dynamodb": "^1.100.0",
-    "@aws-cdk/aws-iam": "^1.100.0",
-    "@aws-cdk/aws-lambda": "^1.100.0",
-    "@aws-cdk/aws-lambda-nodejs": "^1.100.0",
-    "@aws-cdk/aws-logs": "^1.100.0",
-    "@aws-cdk/aws-s3-assets": "^1.100.0",
-    "@aws-cdk/core": "^1.100.0",
     "@types/node": "^14.14.25",
-    "esbuild": "^0.8.43"
+    "esbuild": "^0.8.43",
+    "aws-cdk-lib": "^2.18.0",
+    "@aws-cdk/assert": "^2.18.0",
+    "constructs": "^10.0.99"
   },
   "devDependencies": {
-    "@aws-cdk/aws-apigatewayv2": "^1.100.0",
-    "@aws-cdk/aws-dynamodb": "^1.100.0",
-    "@aws-cdk/aws-iam": "^1.100.0",
-    "@aws-cdk/aws-lambda": "^1.100.0",
-    "@aws-cdk/aws-lambda-nodejs": "^1.100.0",
-    "@aws-cdk/aws-logs": "^1.100.0",
-    "@aws-cdk/aws-s3-assets": "^1.100.0",
-    "@aws-cdk/core": "^1.100.0",
+    "aws-cdk-lib": "^2.18.0",
+    "constructs": "^10.0.99",
     "@commitlint/cli": "^11.0.0",
     "@commitlint/config-conventional": "^11.0.0",
     "@types/archiver": "^5.1.0",
@@ -88,7 +77,7 @@
     "standard-version": "^9.1.0",
     "ts-jest": "^26.5.1",
     "ts-node": "^9.1.1",
-    "tsup": "^4.8.19",
+    "tsup": "^5.12.1",
     "typescript": "~4.0.0"
   },
   "prettier": "prettier-config-planes",
