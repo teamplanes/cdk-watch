@@ -48,13 +48,13 @@
   "peerDependencies": {
     "@types/node": "^14.14.25",
     "esbuild": "^0.8.43",
-    "aws-cdk-lib": "2.0.0-rc.1",
-    "@aws-cdk/assert": "^2.0.0-rc.1",
-    "constructs": "^10.0.0"
+    "aws-cdk-lib": "^2.18.0",
+    "@aws-cdk/assert": "^2.18.0",
+    "constructs": "^10.0.99"
   },
   "devDependencies": {
-    "aws-cdk-lib": "^2.0.0-rc.1",
-    "constructs": "^10.0.0",
+    "aws-cdk-lib": "^2.18.0",
+    "constructs": "^10.0.99",
     "@commitlint/cli": "^11.0.0",
     "@commitlint/config-conventional": "^11.0.0",
     "@types/archiver": "^5.1.0",

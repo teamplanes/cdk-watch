@@ -1184,17 +1184,17 @@ atob@^2.1.2:
   resolved "https://registry.yarnpkg.com/atob/-/atob-2.1.2.tgz#6d9517eb9e030d2436666651e86bd9f6f13533c9"
   integrity sha512-Wm6ukoaOGJi/73p/cl2GvLjTI5JM1k/O14isD73YML8StrH/7/lRFgmg8nICZgD3bZZvjwCGxtMOD3wWNAu8cg==
 
-aws-cdk-lib@^2.0.0-rc.1:
-  version "2.0.0-rc.31"
-  resolved "https://registry.yarnpkg.com/aws-cdk-lib/-/aws-cdk-lib-2.0.0-rc.31.tgz#c82cd7df4c1f73316928fad10505dde260352f9d"
-  integrity sha512-zZBpeANgaV3/y+CKUSEjmaJC1xSTfjrKcW5TpVX+6vtrj5mSr5wbOqgE8429xtxz3kPkfH4myBWukpU4QblXmg==
+aws-cdk-lib@^2.18.0:
+  version "2.18.0"
+  resolved "https://registry.yarnpkg.com/aws-cdk-lib/-/aws-cdk-lib-2.18.0.tgz#a130edf9d90ec166d5c0f14d275ab49cbbe75261"
+  integrity sha512-4XpEqRgKSzDmcpeNGRqRlnWEltnt5+NoHWKpQDHUsAmyJ2QNQ5dYxVLIReaGiE9H8zS0rlpp3exuDEy0UgKj2Q==
   dependencies:
     "@balena/dockerignore" "^1.0.2"
     case "1.6.3"
     fs-extra "^9.1.0"
-    ignore "^5.1.9"
+    ignore "^5.2.0"
     jsonschema "^1.4.0"
-    minimatch "^3.0.4"
+    minimatch "^3.1.2"
     punycode "^2.1.1"
     semver "^7.3.5"
     yaml "1.10.2"
@@ -1712,10 +1712,10 @@ confusing-browser-globals@^1.0.10, confusing-browser-globals@^1.0.7:
   resolved "https://registry.yarnpkg.com/confusing-browser-globals/-/confusing-browser-globals-1.0.10.tgz#30d1e7f3d1b882b25ec4933d1d1adac353d20a59"
   integrity sha512-gNld/3lySHwuhaVluJUKLePYirM3QNCKzVxqAdhJII9/WXKVX5PURzMVJspS1jTslSqjeuG4KMVTSouit5YPHA==
 
-constructs@^10.0.0:
-  version "10.0.9"
-  resolved "https://registry.yarnpkg.com/constructs/-/constructs-10.0.9.tgz#fe724185e4288001850914e95cce2b32d848355f"
-  integrity sha512-C9la/fcnCKe3XIjKPbWuD49mnOYqSWdiMI6TNJmF0ao3pJw6Hap03Q4nsmCxpWMXuMzM546Kw/WnW7ElB3g4OA==
+constructs@^10.0.99:
+  version "10.0.99"
+  resolved "https://registry.yarnpkg.com/constructs/-/constructs-10.0.99.tgz#9b2579c591da129d016b612fe49eea33450a4def"
+  integrity sha512-MazkGXhcYYr0g4irCS5oOftdQfKbxcPErcEDI9RgNbNqRyqh1PChL87Zk//PyhUNcJJohFYaj0jZBc2ovDTuHQ==
 
 contains-path@^0.1.0:
   version "0.1.0"
@@ -3208,10 +3208,10 @@ ignore@^5.1.4:
   resolved "https://registry.yarnpkg.com/ignore/-/ignore-5.1.8.tgz#f150a8b50a34289b33e22f5889abd4d8016f0e57"
   integrity sha512-BMpfD7PpiETpBl/A6S498BaIJ6Y/ABT93ETbby2fP00v4EbvPBXWEoaR1UBPKs3iR53pJY7EtZk5KACI57i1Uw==
 
-ignore@^5.1.9:
-  version "5.1.9"
-  resolved "https://registry.yarnpkg.com/ignore/-/ignore-5.1.9.tgz#9ec1a5cbe8e1446ec60d4420060d43aa6e7382fb"
-  integrity sha512-2zeMQpbKz5dhZ9IwL0gbxSW5w0NK/MSAMtNuhgIHEPmaU3vPdKPL0UdvUCXs5SS4JAwsBxysK5sFMW8ocFiVjQ==
+ignore@^5.2.0:
+  version "5.2.0"
+  resolved "https://registry.yarnpkg.com/ignore/-/ignore-5.2.0.tgz#6d3bac8fa7fe0d45d9f9be7bac2fc279577e345a"
+  integrity sha512-CmxgYGiEPCLhfLnpPp1MoRmifwEIOgjcHXxOBjv7mY96c+eWScsOP9c112ZyLdWHi0FxHjI+4uVhKYp/gcdRmQ==
 
 import-cwd@^3.0.0:
   version "3.0.0"
@@ -4476,6 +4476,13 @@ minimatch@^3.0.4:
   version "3.0.4"
   resolved "https://registry.yarnpkg.com/minimatch/-/minimatch-3.0.4.tgz#5166e286457f03306064be5497e8dbb0c3d32083"
   integrity sha512-yJHVQEhyqPLUTgt9B83PXu6W3rx4MvvHvSUvToogpwoGDOUQ+yDrR0HRot+yOCdCO7u4hX3pWft6kWBBcqh0UA==
+  dependencies:
+    brace-expansion "^1.1.7"
+
+minimatch@^3.1.2:
+  version "3.1.2"
+  resolved "https://registry.yarnpkg.com/minimatch/-/minimatch-3.1.2.tgz#19cd194bfd3e428f049a70817c038d89ab4be35b"
+  integrity sha512-J7p63hRiAjw1NDEww1W7i37+ByIrOWO5XQQAzZ3VOcL0PNybwpfmV/N05zFAzwQ9USyEcX6t3UO+K5aqBQOIHw==
   dependencies:
     brace-expansion "^1.1.7"
 
